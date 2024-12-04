@@ -116,7 +116,6 @@ export default function MainFile() {
     "Prescription Refill",
     "Other (please specify)",
   ];
-
   const handleConfirmAppointment = () => {
     fetchAppointments();
     const newAppointment = {
