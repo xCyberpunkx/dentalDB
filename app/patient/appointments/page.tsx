@@ -1,7 +1,7 @@
 // src/components/MainFile.tsx
 "use client";
 
-import { useEffect, useState } from "react";
+import { use, useEffect, useState } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { format } from "date-fns";
 import BookNew from "./bookNew";
@@ -30,13 +30,14 @@ import {
 import { Label } from "@/components/ui/label";
 import { Appointment } from "@/app/types/appointment";
 import BASE_URL from "@/lib/config";
-
+import { Doctor } from "../types/doctor";
+import axios from "axios";
 export default function MainFile() {
   const { toast } = useToast();
   const [date, setDate] = useState<Date>(new Date());
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
-  const [selectedDoctor, setSelectedDoctor] = useState<string | null>(null);
-  const [selectedReason, setSelectedReason] = useState<string | null>(null);
+  const [selectedDoctor, setSelectedDoctor] = useState<Doctor[]>([]);
+  const [selectedReason, setSelectedReason] = useState<{ id: number; type: string }[]>([]);
   const [additionalNotes, setAdditionalNotes] = useState<string>("");
   const [upcomingAppointments, setUpcomingAppointments] = useState([]);
   const [waitingAppointments, setWaitingAppointments] = useState<Appointment[]>(
@@ -96,68 +97,81 @@ export default function MainFile() {
     useState<Appointment | null>(null);
   const [isDetailsDialogOpen, setIsDetailsDialogOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("book-new");
+  const [reasons, setReasons] = useState<{ id: number; type: string }[]>([]);
 
   const timeSlots = [
-    "9:00 AM",
-    "10:00 AM",
-    "11:00 AM",
-    "12:00 PM",
-    "1:00 PM",
-    "2:00 PM",
-    "3:00 PM",
-    "4:00 PM",
+    "09:00",
+    "10:00",
+    "11:00",
+    "12:00",
+    "13:00",
+    "14:00",
+    "15:00",
   ];
 
-  const reasons = [
-    "General Checkup",
-    "Follow-up Appointment",
-    "Vaccination",
-    "Lab Results Review",
-    "Prescription Refill",
-    "Other (please specify)",
-  ];
+const [doctors,setDoctors] = useState<Doctor[]>([]);
+  
 
-  const handleConfirmAppointment = () => {
-    fetchAppointments();
-    const newAppointment = {
-      id: Date.now(),
-      date: date
-        ? format(date, "MMMM d, yyyy")
-        : format(new Date(), "MMMM d, yyyy"),
-      time: selectedTime,
-      doctor: selectedDoctor,
-      reason: selectedReason,
-    };
+const handleConfirmAppointment = async () => {
+  console.log(selectedDoctor, selectedReason, additionalNotes, date, selectedTime);
 
-    setWaitingAppointments((prevAppointments) => [
-      ...prevAppointments,
-      newAppointment,
-    ]);
-
+  if (!date || !selectedTime || !selectedReason || !selectedDoctor) {
     toast({
-      title: "Appointment Confirmed",
-      description: `Your appointment is scheduled for ${
-        date ? format(date, "MMMM d, yyyy") : format(new Date(), "MMMM d, yyyy")
-      } at ${selectedTime}`,
+      title: "Error",
+      description: "Please select a new date and time.",
+      variant: "destructive",
+    });
+    return;
+  }
+
+  const url = `${BASE_URL}/appointments`;
+
+  try {
+    // Send the POST request using Axios
+    const response = await axios.post(url, {
+      patientId: 1,
+      doctorId: selectedDoctor,
+      date: format(date, "MMMM d, yyyy"),
+      time: selectedTime,
+      typeId: selectedReason, 
+      status: "WAITING",
     });
 
-    // Reset form
-    setDate(new Date());
-    setSelectedTime(null);
-    setSelectedDoctor(null);
-    setSelectedReason(null);
-    setAdditionalNotes("");
+    if (response.status === 200) {
+      alert("Appointment saved successfully");
+      fetchAppointments();
+      
+      toast({
+        title: "Appointment Confirmed",
+        description: `Your appointment is scheduled for ${
+          date ? format(date, "MMMM d, yyyy") : format(new Date(), "MMMM d, yyyy")
+        } at ${selectedTime}`,
+      });
+    } else {
+      alert("Error saving data");
+    }
+  } catch (error) {
+    // Handle error gracefully
+    console.error("Error during appointment confirmation:", error);
+    alert("Error saving data");
+  }
 
-    // Switch to the Waiting tab
-    setActiveTab("waiting");
-  };
+  // Reset form
+  setDate(new Date());
+  setSelectedTime(null);
+  setSelectedDoctor([]);
+  setSelectedReason([]);
+  setAdditionalNotes("");
 
+  // Switch to the Waiting tab
+  setActiveTab("waiting");
+};
   const handleCancelBooking = () => {
     // Reset form
     setDate(new Date());
     setSelectedTime(null);
-    setSelectedDoctor(null);
-    setSelectedReason(null);
+    setSelectedDoctor([]);
+    setSelectedReason([]);
     setAdditionalNotes("");
 
     toast({
@@ -213,12 +227,12 @@ export default function MainFile() {
     setActiveTab("waiting");
   };
 
-  const handleCancel = (appointmentId: number) => {
+  const handleCancel = (appointmentId: Appointment) => {
     setUpcomingAppointments((appointments) =>
-      appointments.filter((apt) => apt.id !== appointmentId)
+      appointments.filter((apt) => apt.id !== appointmentId.id)
     );
     setWaitingAppointments((appointments) =>
-      appointments.filter((apt) => apt.id !== appointmentId)
+      appointments.filter((apt) => apt.id !== appointmentId.id)
     );
 
     toast({
@@ -266,16 +280,39 @@ export default function MainFile() {
     const appointmentsData = await resAppointments.json();
 
     setUpcomingAppointments(
-      appointmentsData.appointments.filter((app) => {
-        return app.status.status === "UPCOMING"; // Ensure to return true or false
+      appointmentsData.filter((app: Appointment) => {
+        return app.status.status === "UPCOMING";
       })
     );
+    setWaitingAppointments(appointmentsData.filter((app: Appointment) => {
+      return app.status.status === "WAITING";
+      
+    }));
+    
   };
-
+  
   useEffect(() => {
     fetchAppointments();
   }, []);
 
+  const fetchalldoctors = async () => {
+    const resDoctors = await fetch(`${BASE_URL}/doctors`);
+    const doctorsData = await resDoctors.json();
+    setDoctors(doctorsData);
+  };
+  useEffect(() => {
+    fetchalldoctors();
+  }, []);
+
+  const fetchAppointmentTypes = async () => {
+    const resAppointmentTypes = await fetch(`${BASE_URL}/types`);
+    const appointmentTypesData = await resAppointmentTypes.json(); 
+      setReasons(appointmentTypesData);
+  };
+  useEffect(() => {
+    fetchAppointmentTypes();
+  
+  }, []);
   return (
     <div className="w-full max-w-6xl mx-auto">
       <main>
@@ -317,22 +354,23 @@ export default function MainFile() {
           </TabsList>
 
           <TabsContent value="book-new">
-            <BookNew
-              date={date}
-              selectedTime={selectedTime}
-              setSelectedTime={setSelectedTime}
-              selectedDoctor={selectedDoctor}
-              setSelectedDoctor={setSelectedDoctor}
-              selectedReason={selectedReason}
-              setSelectedReason={setSelectedReason}
-              additionalNotes={additionalNotes}
-              setAdditionalNotes={setAdditionalNotes}
-              handleConfirmAppointment={handleConfirmAppointment}
-              handleCancelBooking={handleCancelBooking}
-              timeSlots={timeSlots}
-              reasons={reasons}
-              handleSelectDate={handleSelectDate}
-            />
+          <BookNew
+                      date={date}
+                      selectedTime={selectedTime}
+                      setSelectedTime={setSelectedTime}
+                      selectedDoctor={selectedDoctor}
+                      setSelectedDoctor={setSelectedDoctor}
+                      selectedReason={selectedReason}
+                      setSelectedReason={setSelectedReason}
+                      additionalNotes={additionalNotes}
+                      setAdditionalNotes={setAdditionalNotes}
+                      handleConfirmAppointment={handleConfirmAppointment}
+                      handleCancelBooking={handleCancelBooking}
+                      timeSlots={timeSlots}
+                      handleSelectDate={handleSelectDate}
+                      reasons={reasons}
+                      doctors={doctors}
+/>
           </TabsContent>
 
           <TabsContent value="waiting">

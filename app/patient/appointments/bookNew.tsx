@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Doctor } from "@/app/patient/types/doctor";
 
 // Add this interface before the component
 interface BookNewProps {
@@ -25,9 +26,9 @@ interface BookNewProps {
   selectedTime: string | null;
   setSelectedTime: (time: string | null) => void;
   selectedDoctor: string | null;
-  setSelectedDoctor: (doctor: string | null) => void;
-  selectedReason: string | null;
-  setSelectedReason: (reason: string | null) => void;
+  setSelectedDoctor: (doctor: Doctor[]) => void;
+  selectedReason: { id: number; type: string }[];
+  setSelectedReason: (reason: { id: number; type: string }[]) => void;
   additionalNotes: string;
   setAdditionalNotes: (notes: string) => void;
   handleConfirmAppointment: () => void;
@@ -35,6 +36,7 @@ interface BookNewProps {
   timeSlots: string[];
   reasons: string[];
   handleSelectDate: (date: Date) => void;
+  doctors;
 }
 
 export default function BookNew({
@@ -52,6 +54,8 @@ export default function BookNew({
   timeSlots,
   reasons,
   handleSelectDate,
+  doctors,
+
 }: BookNewProps) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -100,46 +104,35 @@ export default function BookNew({
                 <SelectValue placeholder="Choose a doctor" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="Dr. Smith">
+              { doctors.map((doctor) => (
+                  <SelectItem key={doctor.id} value={doctor.id}>
                   <div className="flex items-center">
                     <Avatar className="h-6 w-6 mr-2">
                       <AvatarImage
                         src="/placeholder.svg?height=24&width=24"
                         alt="Dr. Smith"
                       />
-                      <AvatarFallback>DS</AvatarFallback>
+                      <AvatarFallback>
+                        {`${doctor.firstName[0]}${doctor.lastName[0]}`}
+                      </AvatarFallback>
                     </Avatar>
-                    Dr. Smith (Cardiology)
+                    {doctor.firstName} {doctor.lastName} ({doctor.specialty.name})
                   </div>
                 </SelectItem>
-                <SelectItem value="Dr. Johnson">
-                  <div className="flex items-center">
-                    <Avatar className="h-6 w-6 mr-2">
-                      <AvatarImage
-                        src="/placeholder.svg?height=24&width=24"
-                        alt="Dr. Johnson"
-                      />
-                      <AvatarFallback>DJ</AvatarFallback>
-                    </Avatar>
-                    Dr. Johnson (Neurology)
-                  </div>
-                </SelectItem>
+              ))} 
               </SelectContent>
             </Select>
           </div>
           <div className="space-y-2">
             <Label htmlFor="reason">Reason for Visit</Label>
-            <Select
-              value={selectedReason || ""}
-              onValueChange={setSelectedReason}
-            >
+            <Select value={selectedReason.type} onValueChange={setSelectedReason}>
               <SelectTrigger id="reason">
                 <SelectValue placeholder="Select reason" />
               </SelectTrigger>
               <SelectContent>
                 {reasons.map((reason) => (
-                  <SelectItem key={reason} value={reason}>
-                    {reason}
+                  <SelectItem key={reason.id} value={reason.id}>
+                    {reason.type}
                   </SelectItem>
                 ))}
               </SelectContent>

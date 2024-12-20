@@ -35,6 +35,7 @@ interface AppointmentsProps {
   patients: Patient[];
 }
 
+
 export default function Appointments({
   appointments,
   patients,
