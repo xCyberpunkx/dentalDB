@@ -40,6 +40,7 @@ import {
 import { format } from "date-fns";
 import BASE_URL from "@/lib/config";
 import { toast } from "@/components/ui/use-toast";
+import { Textarea } from "@/components/ui/textarea";
 
 const ReceptionistAppointments = () => {
   // export function ReceptionistAppointments() {
@@ -78,6 +79,7 @@ const ReceptionistAppointments = () => {
         date: newAppointment.date,
         time: newAppointment.time,
         typeId: Number(newAppointment.typeId),
+        additionalNotes: newAppointment.additionalNotes,
         status: "UPCOMING",
       }),
     });
@@ -113,12 +115,12 @@ const ReceptionistAppointments = () => {
           time: updatedAppointment.time,
           typeId: Number(updatedAppointment.typeId),
           doctorId: Number(updatedAppointment.doctorId),
+          additionalNotes: updatedAppointment.additionalNotes,
           status: "UPCOMING",
         }),
       });
 
       if (res.ok) {
-        alert("seccuess");
         fetchAppointmentsDoctors();
       } else {
         alert("Error saving data");
@@ -327,7 +329,7 @@ const ReceptionistAppointments = () => {
                               key={doctor.firstName}
                               value={String(doctor.id)}
                             >
-                              {doctor.firstName}
+                              {doctor.firstName} {doctor.lastName}
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -373,6 +375,18 @@ const ReceptionistAppointments = () => {
                         type="time"
                         className="col-span-3"
                         required
+                      />
+                    </div>
+                    <div className="grid grid-cols-4 items-center gap-4">
+                      <Label htmlFor="additionalNotes" className="text-right">
+                        Additional Notes
+                      </Label>
+                      <Textarea
+                        id="additionalNotes"
+                        name="additionalNotes"
+                        className="col-span-3"
+                        placeholder="Enter any additional information about the appointment"
+                        rows={3}
                       />
                     </div>
                   </div>
@@ -441,7 +455,9 @@ const ReceptionistAppointments = () => {
                               <form
                                 onSubmit={(e) => {
                                   e.preventDefault();
-                                  const formData = new FormData(e.target);
+                                  const formData = new FormData(
+                                    e.target as HTMLFormElement
+                                  );
                                   handleUpdateAppointment({
                                     ...selectedAppointment,
                                     ...Object.fromEntries(formData),
@@ -451,13 +467,16 @@ const ReceptionistAppointments = () => {
                                 <div className="grid gap-4 py-4">
                                   <div className="grid grid-cols-4 items-center gap-4">
                                     <Label
-                                      htmlFor="edit-type"
+                                      htmlFor="edit-doctor"
                                       className="text-right"
                                     >
                                       Doctor Name
                                     </Label>
-                                    <Select name="doctorId">
-                                      <SelectTrigger className="col-span-3">
+                                    <Select name="doctorId" required>
+                                      <SelectTrigger
+                                        id="edit-doctor"
+                                        className="col-span-3"
+                                      >
                                         <SelectValue placeholder="Select Doctor Name" />
                                       </SelectTrigger>
                                       <SelectContent>
@@ -479,8 +498,11 @@ const ReceptionistAppointments = () => {
                                     >
                                       Appointment Type
                                     </Label>
-                                    <Select name="typeId">
-                                      <SelectTrigger className="col-span-3">
+                                    <Select name="typeId" required>
+                                      <SelectTrigger
+                                        id="edit-type"
+                                        className="col-span-3"
+                                      >
                                         <SelectValue placeholder="Select appointment type" />
                                       </SelectTrigger>
                                       <SelectContent>
@@ -508,6 +530,7 @@ const ReceptionistAppointments = () => {
                                       type="date"
                                       defaultValue={selectedAppointment.date}
                                       className="col-span-3"
+                                      required
                                     />
                                   </div>
                                   <div className="grid grid-cols-4 items-center gap-4">
@@ -523,6 +546,24 @@ const ReceptionistAppointments = () => {
                                       type="time"
                                       defaultValue={selectedAppointment.time}
                                       className="col-span-3"
+                                      required
+                                    />
+                                  </div>
+                                  <div className="grid grid-cols-4 items-center gap-4">
+                                    <Label
+                                      htmlFor="edit-notes"
+                                      className="text-right"
+                                    >
+                                      Additional Notes
+                                    </Label>
+                                    <Textarea
+                                      id="edit-notes"
+                                      name="additionalNotes"
+                                      defaultValue={
+                                        selectedAppointment.additionalNotes
+                                      }
+                                      className="col-span-3"
+                                      placeholder="Optional additional notes"
                                     />
                                   </div>
                                 </div>
@@ -535,6 +576,7 @@ const ReceptionistAppointments = () => {
                             )}
                           </DialogContent>
                         </Dialog>
+
                         <Button
                           variant="destructive"
                           size="sm"
