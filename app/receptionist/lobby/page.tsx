@@ -39,32 +39,27 @@ import {
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "@/components/ui/use-toast";
-// import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 
 const ReceptionistLobby = () => {
-  // export default function ReceptionistLobby() {
   const [patientQueue, setPatientQueue] = React.useState([
     {
       id: "1",
       name: "John Doe",
       status: "Waiting",
       estimatedWaitTime: 20,
-      arrivalTime: "14:30",
     },
     {
       id: "2",
       name: "Jane Smith",
       status: "In Progress",
       estimatedWaitTime: 5,
-      arrivalTime: "14:15",
     },
     {
       id: "3",
       name: "Bob Johnson",
       status: "Waiting",
       estimatedWaitTime: 35,
-      arrivalTime: "14:45",
     },
   ]);
 
@@ -73,7 +68,6 @@ const ReceptionistLobby = () => {
   const [newPatientEstimatedWaitTime, setNewPatientEstimatedWaitTime] =
     React.useState(30);
 
-  // Predefined list of patients
   const predefinedPatients = [
     "Alice Anderson",
     "Bob Brown",
@@ -95,7 +89,7 @@ const ReceptionistLobby = () => {
           estimatedWaitTime: Math.max(0, patient.estimatedWaitTime - 1),
         }))
       );
-    }, 60000); // Update every minute
+    }, 60000);
 
     return () => clearInterval(timer);
   }, []);
@@ -111,8 +105,6 @@ const ReceptionistLobby = () => {
   }, [patientQueue]);
 
   const updatePatientStatus = (id, newStatus) => {
-    // const updatePatientStatus = (id: number, newStatus: string): void => {
-
     setPatientQueue(
       patientQueue.map((patient) =>
         patient.id === id ? { ...patient, status: newStatus } : patient
@@ -124,14 +116,6 @@ const ReceptionistLobby = () => {
     });
   };
 
-  /*************  ✨ Codeium Command ⭐  *************/
-  /**
-   * Updates the estimated wait time for a given patient ID
-   * @param {string} id The patient ID
-   * @param {string} newTime The new estimated wait time in minutes
-   * @returns {void}
-   */
-  /******  fb1f337f-f36d-461a-8833-902edf0ae386  *******/
   const updateEstimatedWaitTime = (id, newTime) => {
     setPatientQueue(
       patientQueue.map((patient) =>
@@ -152,13 +136,6 @@ const ReceptionistLobby = () => {
     });
   };
 
-  const calculateTimeDifference = (arrivalTime) => {
-    const now = new Date();
-    const arrival = new Date(now.toDateString() + " " + arrivalTime);
-    const diffInMinutes = Math.floor((now - arrival) / 60000);
-    return diffInMinutes;
-  };
-
   const addNewPatient = () => {
     if (newPatientName.trim() === "") {
       toast({
@@ -175,10 +152,6 @@ const ReceptionistLobby = () => {
       name: newPatientName,
       status: "Waiting",
       estimatedWaitTime: newPatientEstimatedWaitTime,
-      arrivalTime: now.toLocaleTimeString([], {
-        hour: "2-digit",
-        minute: "2-digit",
-      }),
     };
 
     setPatientQueue([...patientQueue, newPatient]);
@@ -203,7 +176,6 @@ const ReceptionistLobby = () => {
 
   const onDragEnd = (result) => {
     if (!result.destination) {
-      // If the item is dragged outside the list
       const itemId = result.draggableId;
       setPatientQueue(patientQueue.filter((patient) => patient.id !== itemId));
       toast({
@@ -303,10 +275,7 @@ const ReceptionistLobby = () => {
                         <TableHead>Patient Name</TableHead>
                         <TableHead>Status</TableHead>
                         <TableHead>Estimated Wait Time</TableHead>
-                        <TableHead>Arrival Time</TableHead>
-                        <TableHead>Time Waited</TableHead>
                         <TableHead>Estimated Time to Doctor</TableHead>
-                        <TableHead>Actions</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -353,11 +322,11 @@ const ReceptionistLobby = () => {
                                 />
                                 {" mins"}
                               </TableCell>
-                              <TableCell>{patient.arrivalTime}</TableCell>
+                              {/* <TableCell>{patient.arrivalTime}</TableCell>
                               <TableCell>
                                 {calculateTimeDifference(patient.arrivalTime)}{" "}
                                 mins
-                              </TableCell>
+                              </TableCell> */}
                               <TableCell>
                                 {calculateEstimatedTimeToDoctor(index)} mins
                               </TableCell>
