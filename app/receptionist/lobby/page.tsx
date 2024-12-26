@@ -1,7 +1,6 @@
 "use client";
+
 import * as React from "react";
-import { Plus, RefreshCcw } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -9,17 +8,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-
-import { ScrollArea } from "@/components/ui/scroll-area";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import {
   Table,
   TableBody,
@@ -29,168 +17,132 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import { Badge } from "@/components/ui/badge";
-import { toast } from "@/components/ui/use-toast";
-import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+
+interface Patient {
+  id: string;
+  name: string;
+  status: "WAITING" | "IN_PROGRESS" | "COMPLETED";
+  estimatedTimeToDoctor: number;
+  estimatedWaitTime: number;
+}
 
 const ReceptionistLobby = () => {
-  const [patientQueue, setPatientQueue] = React.useState([
+  const [patientQueue, setPatientQueue] = React.useState<Patient[]>([
     {
       id: "1",
       name: "John Doe",
-      status: "Waiting",
+      status: "WAITING",
+      estimatedTimeToDoctor: 5,
       estimatedWaitTime: 20,
     },
     {
       id: "2",
-      name: "Jane Smith",
-      status: "In Progress",
-      estimatedWaitTime: 5,
+      name: "lolsi Smith",
+      status: "WAITING",
+      estimatedTimeToDoctor: 10,
+      estimatedWaitTime: 25,
     },
     {
       id: "3",
       name: "Bob Johnson",
-      status: "Waiting",
+      status: "WAITING",
+      estimatedTimeToDoctor: 15,
       estimatedWaitTime: 35,
+    },
+    {
+      id: "4",
+      name: "alex forx",
+      status: "WAITING",
+      estimatedTimeToDoctor: 20,
+      estimatedWaitTime: 50,
     },
   ]);
 
-  const [isAddingPatient, setIsAddingPatient] = React.useState(false);
-  const [newPatientName, setNewPatientName] = React.useState("");
-  const [newPatientEstimatedWaitTime, setNewPatientEstimatedWaitTime] =
-    React.useState(30);
-
-  const predefinedPatients = [
-    "Alice Anderson",
-    "Bob Brown",
-    "Charlie Clark",
-    "David Davis",
-    "Eva Evans",
-    "Frank Foster",
-    "Grace Green",
-    "Henry Hill",
-    "Ivy Ingram",
-    "Jack Johnson",
-  ];
-
-  React.useEffect(() => {
-    const timer = setInterval(() => {
-      setPatientQueue((prevQueue) =>
-        prevQueue.map((patient) => ({
-          ...patient,
-          estimatedWaitTime: Math.max(0, patient.estimatedWaitTime - 1),
-        }))
+  const sortPatientQueue = (patients: Patient[]): Patient[] => {
+    return [...patients]
+      .sort((a, b) => {
+        if (a.status === "IN_PROGRESS" && b.status !== "IN_PROGRESS") return -1;
+        if (a.status !== "IN_PROGRESS" && b.status === "IN_PROGRESS") return 1;
+        if (a.status === "COMPLETED" && b.status !== "COMPLETED") return 1;
+        if (a.status !== "COMPLETED" && b.status === "COMPLETED") return -1;
+        return 0;
+      })
+      .map((patient) =>
+        patient.status === "COMPLETED"
+          ? { ...patient, estimatedWaitTime: 0, estimatedTimeToDoctor: 0 }
+          : patient
       );
-    }, 60000);
-
-    return () => clearInterval(timer);
-  }, []);
-
-  const sortedPatientQueue = React.useMemo(() => {
-    return [...patientQueue].sort((a, b) => {
-      if (a.status === "In Progress" && b.status !== "In Progress") return -1;
-      if (a.status !== "In Progress" && b.status === "In Progress") return 1;
-      if (a.status === "Waiting" && b.status !== "Waiting") return -1;
-      if (a.status !== "Waiting" && b.status === "Waiting") return 1;
-      return 0;
-    });
-  }, [patientQueue]);
-
-  const updatePatientStatus = (id, newStatus) => {
-    setPatientQueue(
-      patientQueue.map((patient) =>
-        patient.id === id ? { ...patient, status: newStatus } : patient
-      )
-    );
-    toast({
-      title: "Patient Status Updated",
-      description: `Patient ${id} status changed to ${newStatus}`,
-    });
   };
 
-  const updateEstimatedWaitTime = (id, newTime) => {
-    setPatientQueue(
-      patientQueue.map((patient) =>
+  const updatePatientStatus = (
+    id: string,
+    newStatus: "WAITING" | "IN_PROGRESS" | "COMPLETED"
+  ) => {
+    setPatientQueue((prevQueue) => {
+      const updatedQueue = prevQueue.map((patient) =>
         patient.id === id
           ? {
               ...patient,
-              estimatedWaitTime: parseInt(newTime, 10) || 0,
+              status: newStatus,
+              estimatedWaitTime:
+                newStatus === "COMPLETED" ? 0 : patient.estimatedWaitTime,
             }
           : patient
-      )
-    );
-  };
-
-  const notifyPatient = (id) => {
-    toast({
-      title: "Patient Notified",
-      description: `Notification sent to patient ${id}`,
+      );
+      return sortPatientQueue(updatedQueue);
     });
   };
 
-  const addNewPatient = () => {
-    if (newPatientName.trim() === "") {
-      toast({
-        title: "Error",
-        description: "Please select a patient from the list",
-        variant: "destructive",
-      });
-      return;
+  const calculateEstimatedTimeToDoctor = (
+    patient: Patient,
+    index: number
+  ): number => {
+    if (
+      (index === 0 && patient.status === "IN_PROGRESS") ||
+      patient.status === "COMPLETED"
+    ) {
+      return 0;
     }
-
-    const now = new Date();
-    const newPatient = {
-      id: String(patientQueue.length + 1),
-      name: newPatientName,
-      status: "Waiting",
-      estimatedWaitTime: newPatientEstimatedWaitTime,
-    };
-
-    setPatientQueue([...patientQueue, newPatient]);
-    setNewPatientName("");
-    setNewPatientEstimatedWaitTime(30);
-    setIsAddingPatient(false);
-    toast({
-      title: "New Patient Added",
-      description: `${newPatient.name} has been added to the queue`,
-    });
-  };
-
-  const calculateEstimatedTimeToDoctor = (index) => {
+    if (index === 1 && patient.status === "WAITING") {
+      return patientQueue[0].estimatedWaitTime;
+    }
     let totalTime = 0;
-    for (let i = 0; i < index; i++) {
-      if (sortedPatientQueue[i].status !== "Completed") {
-        totalTime += sortedPatientQueue[i].estimatedWaitTime;
+    for (let i = 1; i < index; i++) {
+      const currentPatient = patientQueue[i];
+      if (currentPatient.status === "WAITING") {
+        totalTime += currentPatient.estimatedTimeToDoctor;
       }
     }
     return totalTime;
   };
 
-  const onDragEnd = (result) => {
-    if (!result.destination) {
-      const itemId = result.draggableId;
-      setPatientQueue(patientQueue.filter((patient) => patient.id !== itemId));
-      toast({
-        title: "Patient Removed",
-        description: `Patient has been removed from the queue`,
-      });
-      return;
-    }
+  React.useEffect(() => {
+    const timer = setInterval(() => {
+      setPatientQueue((prevQueue) =>
+        sortPatientQueue(
+          prevQueue.map((patient) => {
+            if (patient.status === "IN_PROGRESS") {
+              return {
+                ...patient,
+                estimatedWaitTime: Math.max(0, patient.estimatedWaitTime - 1),
+              };
+            } else if (patient.status === "COMPLETED") {
+              return { ...patient, estimatedWaitTime: 0 };
+            }
+            return patient;
+          })
+        )
+      );
+    }, 60000); // Update every minute
 
-    const items = Array.from(patientQueue);
-    const [reorderedItem] = items.splice(result.source.index, 1);
-    items.splice(result.destination.index, 0, reorderedItem);
-
-    setPatientQueue(items);
-  };
+    return () => clearInterval(timer);
+  }, []);
 
   return (
     <div className="w-full max-w-6xl mx-auto">
@@ -198,183 +150,67 @@ const ReceptionistLobby = () => {
         Lobby Management
       </h1>
       <Card className="mb-8">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <div>
-            <CardTitle>Lobby Management</CardTitle>
-            <CardDescription>
-              Track real-time patient flow in the clinic
-            </CardDescription>
-          </div>
-          <div className="flex space-x-2">
-            <Dialog open={isAddingPatient} onOpenChange={setIsAddingPatient}>
-              <DialogTrigger asChild>
-                <Button variant="outline">
-                  <Plus className="mr-2 h-4 w-4" /> Add Patient
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Add New Patient</DialogTitle>
-                  <DialogDescription>
-                    Select a patient and set their estimated wait time.
-                  </DialogDescription>
-                </DialogHeader>
-                <Select
-                  value={newPatientName}
-                  onValueChange={setNewPatientName}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select a patient" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {predefinedPatients.map((patient) => (
-                      <SelectItem key={patient} value={patient}>
-                        {patient}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <div className="flex items-center space-x-2">
-                  <Label htmlFor="estimatedWaitTime">
-                    Estimated Wait Time (minutes):
-                  </Label>
-                  <Input
-                    id="estimatedWaitTime"
-                    type="number"
-                    value={newPatientEstimatedWaitTime}
-                    onChange={(e) =>
-                      setNewPatientEstimatedWaitTime(
-                        parseInt(e.target.value, 10)
-                      )
-                    }
-                    className="w-20"
-                  />
-                </div>
-                <DialogFooter>
-                  <Button onClick={addNewPatient}>Add Patient</Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={() => toast({ title: "Queue Refreshed" })}
-            >
-              <RefreshCcw className="h-4 w-4" />
-            </Button>
-          </div>
+        <CardHeader>
+          <CardTitle>Lobby Management</CardTitle>
+          <CardDescription>
+            View and manage patient flow in the clinic
+          </CardDescription>
         </CardHeader>
         <CardContent>
-          <ScrollArea className="h-[400px]">
-            <DragDropContext onDragEnd={onDragEnd}>
-              <Droppable droppableId="patientQueue">
-                {(provided) => (
-                  <Table {...provided.droppableProps} ref={provided.innerRef}>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Patient Name</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead>Estimated Wait Time</TableHead>
-                        <TableHead>Estimated Time to Doctor</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {sortedPatientQueue.map((patient, index) => (
-                        <Draggable
-                          key={patient.id}
-                          draggableId={patient.id}
-                          index={index}
-                        >
-                          {(provided, snapshot) => (
-                            <TableRow
-                              ref={provided.innerRef}
-                              {...provided.draggableProps}
-                              {...provided.dragHandleProps}
-                              style={{
-                                ...provided.draggableProps.style,
-                                background: snapshot.isDragging
-                                  ? "rgba(0, 0, 0, 0.1)"
-                                  : "transparent",
-                              }}
-                            >
-                              <TableCell>{patient.name}</TableCell>
-                              <TableCell>
-                                <Badge
-                                  variant={
-                                    patient.status === "In Progress"
-                                      ? "default"
-                                      : "secondary"
-                                  }
-                                >
-                                  {patient.status}
-                                </Badge>
-                              </TableCell>
-                              <TableCell>
-                                <Input
-                                  value={patient.estimatedWaitTime}
-                                  onChange={(e) =>
-                                    updateEstimatedWaitTime(
-                                      patient.id,
-                                      e.target.value
-                                    )
-                                  }
-                                  className="w-24"
-                                />
-                                {" mins"}
-                              </TableCell>
-                              {/* <TableCell>{patient.arrivalTime}</TableCell>
-                              <TableCell>
-                                {calculateTimeDifference(patient.arrivalTime)}{" "}
-                                mins
-                              </TableCell> */}
-                              <TableCell>
-                                {calculateEstimatedTimeToDoctor(index)} mins
-                              </TableCell>
-                              <TableCell>
-                                <div className="flex space-x-2">
-                                  <Select
-                                    onValueChange={(value) =>
-                                      updatePatientStatus(patient.id, value)
-                                    }
-                                  >
-                                    <SelectTrigger className="w-[120px]">
-                                      <SelectValue placeholder="Update Status" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                      <SelectItem value="Waiting">
-                                        Waiting
-                                      </SelectItem>
-                                      <SelectItem value="In Progress">
-                                        In Progress
-                                      </SelectItem>
-                                      <SelectItem value="Completed">
-                                        Completed
-                                      </SelectItem>
-                                    </SelectContent>
-                                  </Select>
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => notifyPatient(patient.id)}
-                                  >
-                                    Notify
-                                  </Button>
-                                </div>
-                              </TableCell>
-                            </TableRow>
-                          )}
-                        </Draggable>
-                      ))}
-                      {provided.placeholder}
-                    </TableBody>
-                  </Table>
-                )}
-              </Droppable>
-            </DragDropContext>
-          </ScrollArea>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Patient Name</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>ch7al yb9a 3nd tbibb apipri</TableHead>
+                <TableHead>ch7al mazal bah ji dalto</TableHead>
+                <TableHead>Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {sortPatientQueue(patientQueue).map((patient, index) => {
+                const estimatedTimeToDoctor = calculateEstimatedTimeToDoctor(
+                  patient,
+                  index
+                );
+
+                return (
+                  <TableRow key={patient.id}>
+                    <TableCell>{patient.name}</TableCell>
+                    <TableCell>{patient.status}</TableCell>
+                    <TableCell>{patient.estimatedWaitTime} mins</TableCell>
+                    <TableCell>{estimatedTimeToDoctor} mins</TableCell>
+                    <TableCell>
+                      <Select
+                        onValueChange={(value) =>
+                          updatePatientStatus(
+                            patient.id,
+                            value as "WAITING" | "IN_PROGRESS" | "COMPLETED"
+                          )
+                        }
+                        defaultValue={patient.status}
+                      >
+                        <SelectTrigger className="w-[180px]">
+                          <SelectValue placeholder="Change Status" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="WAITING">WAITING</SelectItem>
+                          <SelectItem value="IN_PROGRESS">
+                            IN_PROGRESS
+                          </SelectItem>
+                          <SelectItem value="COMPLETED">COMPLETED</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
         </CardContent>
       </Card>
     </div>
   );
 };
+
 export default ReceptionistLobby;
