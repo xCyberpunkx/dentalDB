@@ -37,52 +37,44 @@ Lucide icons
 Geist font family
 Date Management
 Date Management: date-fns
+
 🚀 Getting Started
 Backend Setup
 Clone the backend repository
 
-bash
-Copy code
+
 git clone https://github.com/ismail-devmaster/dental-backend.git  
 cd dental-backend  
 Install dependencies
 
-bash
-Copy code
+
 npm install  
 Setup PostgreSQL
 
 Ensure PostgreSQL is installed locally or on a remote server.
 Update .env file with database configurations.
 env
-Copy code
+
 DATABASE_URL=your_database_url  
 Run Database Migrations
 
-bash
-Copy code
+
 npx prisma migrate dev  
 Start Backend Server
 
-bash
-Copy code
 npm run dev  
 Frontend Setup
 Clone the frontend repository
 
-bash
-Copy code
 git clone https://github.com/ismail-devmaster/dental-frontend.git  
 cd dental-frontend  
 Install dependencies
 
-bash
-Copy code
+
 npm install  
 Start Development Server
 
-bash
-Copy code
+
 npm run dev  
 Open http://localhost:3000
 
@@ -120,7 +112,7 @@ Frontend:
 
 Create a .env.local file in the frontend folder (dental-frontend/) and set:
 env
-Copy code
+
 NEXT_PUBLIC_API_URL=http://localhost:5000
 🤝 Contributing
 Fork the repository.
