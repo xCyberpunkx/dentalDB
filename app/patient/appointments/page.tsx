@@ -113,7 +113,7 @@ const [doctors,setDoctors] = useState<Doctor[]>([]);
   
 
 const handleConfirmAppointment = async () => {
-  console.log(selectedDoctor, selectedReason, additionalNotes, date, selectedTime);
+ // console.log(selectedDoctor, selectedReason, additionalNotes, date, selectedTime);
 
   if (!date || !selectedTime || !selectedReason || !selectedDoctor) {
     toast({
@@ -227,23 +227,31 @@ const handleConfirmAppointment = async () => {
     setActiveTab("waiting");
   };
 
-  const handleCancel = (appointmentId: Appointment) => {
-    setUpcomingAppointments((appointments) =>
-      appointments.filter((apt) => apt.id !== appointmentId.id)
-    );
-    setWaitingAppointments((appointments) =>
-      appointments.filter((apt) => apt.id !== appointmentId.id)
-    );
-
-    toast({
-      title: "Appointment Cancelled",
-      description: "Your appointment has been cancelled successfully.",
-    });
-  };
-
-  const handleViewDetails = (appointment: Appointment) => {
-    setSelectedAppointmentDetails(appointment);
-    setIsDetailsDialogOpen(true);
+  const handleCancel = async (appointmentId: Appointment) => {
+    try {
+      // Delete the appointment from the backend
+      await axios.delete(`${BASE_URL}/appointments/${appointmentId.id}`);
+  
+      // Update local state
+      setUpcomingAppointments((appointments) =>
+        appointments.filter((apt) => apt.id !== appointmentId.id)
+      );
+      setWaitingAppointments((appointments) =>
+        appointments.filter((apt) => apt.id !== appointmentId.id)
+      );
+  
+      toast({
+        title: "Appointment Cancelled",
+        description: "Your appointment has been cancelled successfully.",
+      });
+    } catch (error) {
+      console.error("Error cancelling appointment:", error);
+      toast({
+        title: "Error",
+        description: "Failed to cancel appointment",
+        variant: "destructive",
+      });
+    }
   };
 
   const today = new Date();
@@ -260,7 +268,7 @@ const handleConfirmAppointment = async () => {
       setDate(selectedDate);
     }
   };
-
+/*                        PREV SNIPPET
   const updateAppointmentHistory = (appointment: Appointment) => {
     if (appointment.time) {
       const historyEntry = {
@@ -274,44 +282,96 @@ const handleConfirmAppointment = async () => {
       };
       setAppointmentHistory((prev) => [...prev, historyEntry]);
     }
+  }; */ 
+  const updateAppointmentHistory = async (appointment: Appointment) => {
+    if (appointment.time) {
+      const historyEntry = {
+        id: appointment.id,
+        date: appointment.date,
+        time: appointment.time as string,
+        doctor: appointment.doctor || "",
+        reason: appointment.reason || "",
+        outcome: "Completed",
+        notes: appointment.notes || "",
+      };
+      
+      try {
+        // Update the appointment history in the backend
+        await axios.post(`${BASE_URL}/appointment-history`, historyEntry);
+        setAppointmentHistory((prev) => [...prev, historyEntry]);
+      } catch (error) {
+        console.error("Error updating appointment history:", error);
+        toast({
+          title: "Error",
+          description: "Failed to update appointment history",
+          variant: "destructive",
+        });
+      }
+    }
   };
   const fetchAppointments = async () => {
-    const resAppointments = await fetch(`${BASE_URL}/appointments`);
-    const appointmentsData = await resAppointments.json();
-
-    setUpcomingAppointments(
-      appointmentsData.filter((app: Appointment) => {
-        return app.status.status === "UPCOMING";
-      })
-    );
-    setWaitingAppointments(appointmentsData.filter((app: Appointment) => {
-      return app.status.status === "WAITING";
-      
-    }));
-    
+    try {
+      const response = await axios.get(`${BASE_URL}/appointments`);
+      const appointmentsData = response.data;
+  
+      setUpcomingAppointments(
+        appointmentsData.filter((app: Appointment) => {
+          return app.status === "UPCOMING";
+        })
+      );
+      setWaitingAppointments(
+        appointmentsData.filter((app: Appointment) => {
+          return app.status === "WAITING";
+        })
+      );
+    } catch (error) {
+      console.error("Error fetching appointments:", error);
+      toast({
+        title: "Error",
+        description: "Failed to fetch appointments",
+        variant: "destructive",
+      });
+    }
+  };
+  
+  const fetchAllDoctors = async () => {
+    try {
+      const response = await axios.get(`${BASE_URL}/doctors`);
+      setDoctors(response.data);
+    } catch (error) {
+      console.error("Error fetching doctors:", error);
+      toast({
+        title: "Error",
+        description: "Failed to fetch doctors list",
+        variant: "destructive",
+      });
+    }
+  };
+  
+  const fetchAppointmentTypes = async () => {
+    try {
+      const response = await axios.get(`${BASE_URL}/types`);
+      setReasons(response.data);
+    } catch (error) {
+      console.error("Error fetching appointment types:", error);
+      toast({
+        title: "Error",
+        description: "Failed to fetch appointment types",
+        variant: "destructive",
+      });
+    }
   };
   
   useEffect(() => {
     fetchAppointments();
   }, []);
-
-  const fetchalldoctors = async () => {
-    const resDoctors = await fetch(`${BASE_URL}/doctors`);
-    const doctorsData = await resDoctors.json();
-    setDoctors(doctorsData);
-  };
+  
   useEffect(() => {
-    fetchalldoctors();
+    fetchAllDoctors();
   }, []);
-
-  const fetchAppointmentTypes = async () => {
-    const resAppointmentTypes = await fetch(`${BASE_URL}/types`);
-    const appointmentTypesData = await resAppointmentTypes.json(); 
-      setReasons(appointmentTypesData);
-  };
+  
   useEffect(() => {
     fetchAppointmentTypes();
-  
   }, []);
   return (
     <div className="w-full max-w-6xl mx-auto">
