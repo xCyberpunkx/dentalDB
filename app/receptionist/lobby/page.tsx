@@ -23,48 +23,39 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { io } from "socket.io-client";
 
 interface Patient {
+  firstName: string;
+  lastName: string;
+}
+interface QueueItem {
   id: string;
-  name: string;
+  patient: Patient;
   status: "WAITING" | "IN_PROGRESS" | "COMPLETED";
   estimatedTimeToDoctor: number;
   estimatedWaitTime: number;
 }
 
 const ReceptionistLobby = () => {
-  const [patientQueue, setPatientQueue] = React.useState<Patient[]>([
-    {
-      id: "1",
-      name: "John Doe",
-      status: "WAITING",
-      estimatedTimeToDoctor: 5,
-      estimatedWaitTime: 20,
-    },
-    {
-      id: "2",
-      name: "lolsi Smith",
-      status: "WAITING",
-      estimatedTimeToDoctor: 10,
-      estimatedWaitTime: 25,
-    },
-    {
-      id: "3",
-      name: "Bob Johnson",
-      status: "WAITING",
-      estimatedTimeToDoctor: 15,
-      estimatedWaitTime: 35,
-    },
-    {
-      id: "4",
-      name: "alex forx",
-      status: "WAITING",
-      estimatedTimeToDoctor: 20,
-      estimatedWaitTime: 50,
-    },
-  ]);
+  const [patientQueue, setPatientQueue] = React.useState<QueueItem[]>([]);
 
-  const sortPatientQueue = (patients: Patient[]): Patient[] => {
+  React.useEffect(() => {
+    const newSocket = io("http://localhost:400");
+    newSocket.on("initialTimes", (initialTimes: QueueItem[]) => {
+      setPatientQueue(initialTimes);
+    });
+
+    newSocket.on("timeUpdate", (updatedTimes: QueueItem[]) => {
+      setPatientQueue(updatedTimes);
+    });
+
+    return () => {
+      newSocket.disconnect();
+    };
+  }, []);
+
+  const sortPatientQueue = (patients: QueueItem[]): QueueItem[] => {
     return [...patients]
       .sort((a, b) => {
         if (a.status === "IN_PROGRESS" && b.status !== "IN_PROGRESS") return -1;
@@ -80,70 +71,29 @@ const ReceptionistLobby = () => {
       );
   };
 
-  const updatePatientStatus = (
+  const updatePatientStatus = async (
     id: string,
     newStatus: "WAITING" | "IN_PROGRESS" | "COMPLETED"
   ) => {
-    setPatientQueue((prevQueue) => {
-      const updatedQueue = prevQueue.map((patient) =>
-        patient.id === id
-          ? {
-              ...patient,
-              status: newStatus,
-              estimatedWaitTime:
-                newStatus === "COMPLETED" ? 0 : patient.estimatedWaitTime,
-            }
-          : patient
-      );
-      return sortPatientQueue(updatedQueue);
-    });
+    try {
+      await fetch(`/api/queue/${id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ status: newStatus }),
+      });
+
+      setPatientQueue((prevQueue) => {
+        const updatedQueue = prevQueue.map((patient) =>
+          patient.id === id ? { ...patient, status: newStatus } : patient
+        );
+        return sortPatientQueue(updatedQueue);
+      });
+    } catch (error) {
+      console.error("Error updating patient status:", error);
+    }
   };
-
-  const calculateEstimatedTimeToDoctor = (
-    patient: Patient,
-    index: number
-  ): number => {
-    if (
-      (index === 0 && patient.status === "IN_PROGRESS") ||
-      patient.status === "COMPLETED"
-    ) {
-      return 0;
-    }
-    if (index === 1 && patient.status === "WAITING") {
-      return patientQueue[0].estimatedWaitTime;
-    }
-    let totalTime = 0;
-    for (let i = 1; i < index; i++) {
-      const currentPatient = patientQueue[i];
-      if (currentPatient.status === "WAITING") {
-        totalTime += currentPatient.estimatedTimeToDoctor;
-      }
-    }
-    return totalTime;
-  };
-
-  React.useEffect(() => {
-    const timer = setInterval(() => {
-      setPatientQueue((prevQueue) =>
-        sortPatientQueue(
-          prevQueue.map((patient) => {
-            if (patient.status === "IN_PROGRESS") {
-              return {
-                ...patient,
-                estimatedWaitTime: Math.max(0, patient.estimatedWaitTime - 1),
-              };
-            } else if (patient.status === "COMPLETED") {
-              return { ...patient, estimatedWaitTime: 0 };
-            }
-            return patient;
-          })
-        )
-      );
-    }, 60000); // Update every minute
-
-    return () => clearInterval(timer);
-  }, []);
-
   return (
     <div className="w-full max-w-6xl mx-auto">
       <h1 className="text-4xl font-extrabold text-gray-900 mb-8 text-center dark:text-white">
@@ -162,49 +112,42 @@ const ReceptionistLobby = () => {
               <TableRow>
                 <TableHead>Patient Name</TableHead>
                 <TableHead>Status</TableHead>
-                <TableHead>ch7al yb9a 3nd tbibb apipri</TableHead>
-                <TableHead>ch7al mazal bah ji dalto</TableHead>
+                <TableHead>Estimated Wait Time</TableHead>
+                <TableHead>Time to Doctor</TableHead>
                 <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {sortPatientQueue(patientQueue).map((patient, index) => {
-                const estimatedTimeToDoctor = calculateEstimatedTimeToDoctor(
-                  patient,
-                  index
-                );
-
-                return (
-                  <TableRow key={patient.id}>
-                    <TableCell>{patient.name}</TableCell>
-                    <TableCell>{patient.status}</TableCell>
-                    <TableCell>{patient.estimatedWaitTime} mins</TableCell>
-                    <TableCell>{estimatedTimeToDoctor} mins</TableCell>
-                    <TableCell>
-                      <Select
-                        onValueChange={(value) =>
-                          updatePatientStatus(
-                            patient.id,
-                            value as "WAITING" | "IN_PROGRESS" | "COMPLETED"
-                          )
-                        }
-                        defaultValue={patient.status}
-                      >
-                        <SelectTrigger className="w-[180px]">
-                          <SelectValue placeholder="Change Status" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="WAITING">WAITING</SelectItem>
-                          <SelectItem value="IN_PROGRESS">
-                            IN_PROGRESS
-                          </SelectItem>
-                          <SelectItem value="COMPLETED">COMPLETED</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
+              {sortPatientQueue(patientQueue).map((patient) => (
+                <TableRow key={patient.id}>
+                  <TableCell>
+                    {patient.patient.firstName} {patient.patient.lastName}
+                  </TableCell>
+                  <TableCell>{patient.status}</TableCell>
+                  <TableCell>{patient.estimatedWaitTime} mins</TableCell>
+                  <TableCell>{patient.estimatedTimeToDoctor} mins</TableCell>
+                  <TableCell>
+                    <Select
+                      onValueChange={(value) =>
+                        updatePatientStatus(
+                          patient.id,
+                          value as "WAITING" | "IN_PROGRESS" | "COMPLETED"
+                        )
+                      }
+                      defaultValue={patient.status}
+                    >
+                      <SelectTrigger className="w-[180px]">
+                        <SelectValue placeholder="Change Status" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="WAITING">WAITING</SelectItem>
+                        <SelectItem value="IN_PROGRESS">IN_PROGRESS</SelectItem>
+                        <SelectItem value="COMPLETED">COMPLETED</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </TableCell>
+                </TableRow>
+              ))}
             </TableBody>
           </Table>
         </CardContent>
