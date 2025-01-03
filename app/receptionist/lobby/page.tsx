@@ -41,7 +41,7 @@ const ReceptionistLobby = () => {
   const [patientQueue, setPatientQueue] = React.useState<QueueItem[]>([]);
 
   React.useEffect(() => {
-    const newSocket = io("http://localhost:400");
+    const newSocket = io("http://localhost:4000");
     newSocket.on("initialTimes", (initialTimes: QueueItem[]) => {
       setPatientQueue(initialTimes);
     });
@@ -55,45 +55,11 @@ const ReceptionistLobby = () => {
     };
   }, []);
 
-  const sortPatientQueue = (patients: QueueItem[]): QueueItem[] => {
-    return [...patients]
-      .sort((a, b) => {
-        if (a.status === "IN_PROGRESS" && b.status !== "IN_PROGRESS") return -1;
-        if (a.status !== "IN_PROGRESS" && b.status === "IN_PROGRESS") return 1;
-        if (a.status === "COMPLETED" && b.status !== "COMPLETED") return 1;
-        if (a.status !== "COMPLETED" && b.status === "COMPLETED") return -1;
-        return 0;
-      })
-      .map((patient) =>
-        patient.status === "COMPLETED"
-          ? { ...patient, estimatedWaitTime: 0, estimatedTimeToDoctor: 0 }
-          : patient
-      );
-  };
-
   const updatePatientStatus = async (
     id: string,
     newStatus: "WAITING" | "IN_PROGRESS" | "COMPLETED"
-  ) => {
-    try {
-      await fetch(`/api/queue/${id}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ status: newStatus }),
-      });
+  ) => {};
 
-      setPatientQueue((prevQueue) => {
-        const updatedQueue = prevQueue.map((patient) =>
-          patient.id === id ? { ...patient, status: newStatus } : patient
-        );
-        return sortPatientQueue(updatedQueue);
-      });
-    } catch (error) {
-      console.error("Error updating patient status:", error);
-    }
-  };
   return (
     <div className="w-full max-w-6xl mx-auto">
       <h1 className="text-4xl font-extrabold text-gray-900 mb-8 text-center dark:text-white">
@@ -118,7 +84,7 @@ const ReceptionistLobby = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {sortPatientQueue(patientQueue).map((patient) => (
+              {patientQueue.map((patient) => (
                 <TableRow key={patient.id}>
                   <TableCell>
                     {patient.patient.firstName} {patient.patient.lastName}
