@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 // src/components/MainFile.tsx
 "use client";
 
@@ -268,47 +269,39 @@ const handleConfirmAppointment = async () => {
       setDate(selectedDate);
     }
   };
-/*                        PREV SNIPPET
-  const updateAppointmentHistory = (appointment: Appointment) => {
-    if (appointment.time) {
-      const historyEntry = {
-        id: appointment.id,
-        date: appointment.date,
-        time: appointment.time as string,
-        doctor: appointment.doctor || "",
-        reason: appointment.reason || "",
-        outcome: "Completed",
-        notes: appointment.notes || "",
-      };
+
+const handleViewDetails = (appointmentId: string) => {
+  // Implement the logic to handle viewing details of an appointment
+  console.log(`Viewing details for appointment ID: ${appointmentId}`);
+};
+
+const updateAppointmentHistory = async (appointment: Appointment) => {
+  if (appointment.time) {
+    const historyEntry = {
+      id: appointment.id,
+      date: appointment.date,
+      time: appointment.time as string,
+      doctor: appointment.doctor || "",
+      reason: appointment.reason || "",
+      outcome: "Completed",
+      notes: appointment.notes || "",
+    };
+    
+    try {
+      // Update the appointment history in the backend
+      await axios.post(`${BASE_URL}/appointment-history`, historyEntry);
       setAppointmentHistory((prev) => [...prev, historyEntry]);
+    } catch (error) {
+      console.error("Error updating appointment history:", error);
+      toast({
+        title: "Error",
+        description: "Failed to update appointment history",
+        variant: "destructive",
+      });
     }
-  }; */ 
-  const updateAppointmentHistory = async (appointment: Appointment) => {
-    if (appointment.time) {
-      const historyEntry = {
-        id: appointment.id,
-        date: appointment.date,
-        time: appointment.time as string,
-        doctor: appointment.doctor || "",
-        reason: appointment.reason || "",
-        outcome: "Completed",
-        notes: appointment.notes || "",
-      };
-      
-      try {
-        // Update the appointment history in the backend
-        await axios.post(`${BASE_URL}/appointment-history`, historyEntry);
-        setAppointmentHistory((prev) => [...prev, historyEntry]);
-      } catch (error) {
-        console.error("Error updating appointment history:", error);
-        toast({
-          title: "Error",
-          description: "Failed to update appointment history",
-          variant: "destructive",
-        });
-      }
-    }
-  };
+  }
+};
+
   const fetchAppointments = async () => {
     try {
       const response = await axios.get(`${BASE_URL}/appointments`);
