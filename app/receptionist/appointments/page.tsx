@@ -37,128 +37,175 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { format } from "date-fns";
+import BASE_URL from "@/lib/config";
+import { toast } from "@/components/ui/use-toast";
+import { Textarea } from "@/components/ui/textarea";
 
 const ReceptionistAppointments = () => {
   // export function ReceptionistAppointments() {
-  const [appointments, setAppointments] = React.useState([
-    {
-      id: 1,
-      patientName: "Sarah Johnson",
-      doctorName: "Dr. John Smith",
-      type: "General Checkup",
-      date: "2024-11-15",
-      time: "14:00",
-    },
-    {
-      id: 2,
-      patientName: "Mike Brown",
-      doctorName: "Dr. Sarah Lee",
-      type: "Dental Cleaning",
-      date: "2024-11-17",
-      time: "10:00",
-    },
-    {
-      id: 3,
-      patientName: "Emily White",
-      doctorName: "Dr. Michael Johnson",
-      type: "Annual Physical",
-      date: "2024-11-30",
-      time: "11:00",
-    },
-  ]);
-
+  const [appointments, setAppointments] = React.useState([]);
+  const [doctors, setDoctors] = React.useState([]);
+  const [patients, setPatients] = React.useState([]);
+  const [appointmentTypes, setAppointmentTypes] = React.useState([]);
   const [isAddingAppointment, setIsAddingAppointment] = React.useState(false);
   const [selectedAppointment, setSelectedAppointment] = React.useState(null);
   const [searchTerm, setSearchTerm] = React.useState("");
   const [filterPeriod, setFilterPeriod] = React.useState("all");
 
-  const patients = [
-    { id: 1, name: "Sarah Johnson" },
-    { id: 2, name: "Mike Brown" },
-    { id: 3, name: "Emily White" },
-    { id: 4, name: "John Doe" },
-    { id: 5, name: "Jane Smith" },
-  ];
-
-  const doctors = [
-    { id: 1, name: "Dr. John Smith" },
-    { id: 2, name: "Dr. Sarah Lee" },
-    { id: 3, name: "Dr. Michael Johnson" },
-    { id: 4, name: "Dr. Emily Brown" },
-    { id: 5, name: "Dr. David Wilson" },
-  ];
-
-  const appointmentTypes = [
-    "General Checkup",
-    "Dental Cleaning",
-    "Annual Physical",
-    "Vaccination",
-    "Consultation",
-  ];
-
-  const handleAddAppointment = (newAppointment) => {
-    setAppointments([
-      ...appointments,
-      {
-        ...newAppointment,
-        id: appointments.length + 1,
-        doctorName: newAppointment.doctorName,
-      },
-    ]);
-    setIsAddingAppointment(false);
+  const handleAddAppointment = async (newAppointment) => {
+    if (
+      !newAppointment.date ||
+      !newAppointment.time ||
+      !newAppointment.typeId ||
+      !newAppointment.patientId ||
+      !newAppointment.doctorId
+    ) {
+      toast({
+        title: "Error",
+        description: "Please select a new date and time.",
+        variant: "destructive",
+      });
+      return;
+    }
+    const url = `${BASE_URL}/appointments`;
+    const method = "POST";
+    const res = await fetch(url, {
+      method,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        patientId: Number(newAppointment.patientId),
+        doctorId: Number(newAppointment.doctorId),
+        date: newAppointment.date,
+        time: newAppointment.time,
+        typeId: Number(newAppointment.typeId),
+        additionalNotes: newAppointment.additionalNotes,
+        status: "UPCOMING",
+      }),
+    });
+    if (res.ok) {
+      fetchAppointmentsDoctors();
+      setIsAddingAppointment(false);
+    } else {
+      alert("Error saving data");
+    }
   };
 
-  const handleUpdateAppointment = (updatedAppointment) => {
-    setAppointments(
-      appointments.map((a) =>
-        a.id === updatedAppointment.id
-          ? {
-              ...a,
-              ...updatedAppointment,
-              doctorName: updatedAppointment.doctorName,
-            }
-          : a
-      )
-    );
-    setSelectedAppointment(null);
+  const handleUpdateAppointment = async (updatedAppointment) => {
+    if (
+      !updatedAppointment.time ||
+      !updatedAppointment.date ||
+      !updatedAppointment.doctorId ||
+      !updatedAppointment.typeId
+    ) {
+      toast({
+        title: "Error",
+        description: "Please select a new date and time.",
+        variant: "destructive",
+      });
+      return;
+    } else if (selectedAppointment) {
+      const url = `${BASE_URL}/appointments/${selectedAppointment.id}`;
+      const method = "PUT";
+      const res = await fetch(url, {
+        method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          date: updatedAppointment.date,
+          time: updatedAppointment.time,
+          typeId: Number(updatedAppointment.typeId),
+          doctorId: Number(updatedAppointment.doctorId),
+          additionalNotes: updatedAppointment.additionalNotes,
+          status: "UPCOMING",
+        }),
+      });
+
+      if (res.ok) {
+        fetchAppointmentsDoctors();
+      } else {
+        alert("Error saving data");
+      }
+      setSelectedAppointment(null);
+    }
   };
 
-  const handleRemoveAppointment = (id) => {
-    setAppointments(appointments.filter((a) => a.id !== id));
+  const handleRemoveAppointment = async (id) => {
+    const url = `${BASE_URL}/appointments/${id}`;
+    const method = "DELETE";
+    const res = await fetch(url, {
+      method,
+      headers: { "Content-Type": "application/json" },
+    });
+
+    if (res.ok) {
+      fetchAppointmentsDoctors(); // Refresh users list
+    } else {
+      alert("Error saving data");
+    }
+
+    toast({
+      title: "Appointment Cancelled",
+      description: "Your appointment has been cancelled successfully.",
+    });
   };
 
   const filteredAppointments = appointments.filter((appointment) => {
     const matchesSearch =
-      appointment.patientName
+      appointment.patient.firstName
         .toLowerCase()
         .includes(searchTerm.toLowerCase()) ||
-      appointment.type.toLowerCase().includes(searchTerm.toLowerCase());
+      appointment.patient.lastName
+        .toLowerCase()
+        .includes(searchTerm.toLowerCase()) ||
+      appointment.type.type.toLowerCase().includes(searchTerm.toLowerCase());
 
+    // Parse date and normalize to local midnight
     const appointmentDate = new Date(appointment.date);
+    const normalizedAppointmentDate = new Date(
+      appointmentDate.getFullYear(),
+      appointmentDate.getMonth(),
+      appointmentDate.getDate()
+    );
+
+    // Get the start of today (local midnight)
     const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const oneWeekLater = new Date(today);
-    oneWeekLater.setDate(today.getDate() + 7);
-    const oneMonthLater = new Date(today);
-    oneMonthLater.setMonth(today.getMonth() + 1);
+    const normalizedToday = new Date(
+      today.getFullYear(),
+      today.getMonth(),
+      today.getDate()
+    );
+
+    // Calculate the start of one week later (local midnight)
+    const oneWeekLater = new Date(
+      normalizedToday.getFullYear(),
+      normalizedToday.getMonth(),
+      normalizedToday.getDate() + 7
+    );
+
+    // Calculate the start of one month later (local midnight)
+    const oneMonthLater = new Date(
+      normalizedToday.getFullYear(),
+      normalizedToday.getMonth() + 1,
+      normalizedToday.getDate()
+    );
 
     switch (filterPeriod) {
       case "today":
         return (
           matchesSearch &&
-          appointmentDate.toDateString() === today.toDateString()
+          normalizedAppointmentDate.getTime() === normalizedToday.getTime()
         );
       case "this-week":
         return (
           matchesSearch &&
-          appointmentDate >= today &&
-          appointmentDate < oneWeekLater
+          normalizedAppointmentDate >= normalizedToday &&
+          normalizedAppointmentDate < oneWeekLater
         );
       case "this-month":
         return (
           matchesSearch &&
-          appointmentDate >= today &&
-          appointmentDate < oneMonthLater
+          normalizedAppointmentDate >= normalizedToday &&
+          normalizedAppointmentDate < oneMonthLater
         );
       default:
         return matchesSearch;
@@ -167,6 +214,29 @@ const ReceptionistAppointments = () => {
 
   const today = new Date();
   const formattedToday = today.toISOString().split("T")[0];
+
+  const fetchAppointmentsDoctors = async () => {
+    const resAppointments = await fetch(`${BASE_URL}/appointments`);
+    const appointmentsData = await resAppointments.json();
+    const resTypes = await fetch(`${BASE_URL}/types`);
+    const typesData = await resTypes.json();
+    const resDoctors = await fetch(`${BASE_URL}/doctors`);
+    const doctorsData = await resDoctors.json();
+    const resPatients = await fetch(`${BASE_URL}/patients`);
+    const patientsData = await resPatients.json();
+    setAppointments(
+      appointmentsData.filter((app) => {
+        return app.status.status === "UPCOMING"; // Ensure to return true or false
+      })
+    );
+    setDoctors(doctorsData);
+    setAppointmentTypes(typesData);
+    setPatients(patientsData);
+  };
+
+  React.useEffect(() => {
+    fetchAppointmentsDoctors();
+  }, [appointments]);
 
   return (
     <div className="w-full max-w-6xl mx-auto">
@@ -229,14 +299,17 @@ const ReceptionistAppointments = () => {
                       <Label htmlFor="patientName" className="text-right">
                         Patient Name
                       </Label>
-                      <Select name="patientName" required>
+                      <Select name="patientId" required>
                         <SelectTrigger className="col-span-3">
                           <SelectValue placeholder="Select a patient" />
                         </SelectTrigger>
                         <SelectContent>
                           {patients.map((patient) => (
-                            <SelectItem key={patient.id} value={patient.name}>
-                              {patient.name}
+                            <SelectItem
+                              key={patient.firstName}
+                              value={String(patient.id)}
+                            >
+                              {`${patient.firstName} ${patient.lastName} (Age: ${patient.age}, Phone: ${patient.phone})`}
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -246,14 +319,17 @@ const ReceptionistAppointments = () => {
                       <Label htmlFor="doctorName" className="text-right">
                         Doctor Name
                       </Label>
-                      <Select name="doctorName" required>
+                      <Select name="doctorId" required>
                         <SelectTrigger className="col-span-3">
                           <SelectValue placeholder="Select a doctor" />
                         </SelectTrigger>
                         <SelectContent>
                           {doctors.map((doctor) => (
-                            <SelectItem key={doctor.id} value={doctor.name}>
-                              {doctor.name}
+                            <SelectItem
+                              key={doctor.firstName}
+                              value={String(doctor.id)}
+                            >
+                              {doctor.firstName} {doctor.lastName}
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -263,14 +339,14 @@ const ReceptionistAppointments = () => {
                       <Label htmlFor="type" className="text-right">
                         Appointment Type
                       </Label>
-                      <Select name="type" required>
+                      <Select name="typeId" required>
                         <SelectTrigger className="col-span-3">
                           <SelectValue placeholder="Select appointment type" />
                         </SelectTrigger>
                         <SelectContent>
                           {appointmentTypes.map((type) => (
-                            <SelectItem key={type} value={type}>
-                              {type}
+                            <SelectItem key={type.type} value={String(type.id)}>
+                              {type.type}
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -299,6 +375,18 @@ const ReceptionistAppointments = () => {
                         type="time"
                         className="col-span-3"
                         required
+                      />
+                    </div>
+                    <div className="grid grid-cols-4 items-center gap-4">
+                      <Label htmlFor="additionalNotes" className="text-right">
+                        Additional Notes
+                      </Label>
+                      <Textarea
+                        id="additionalNotes"
+                        name="additionalNotes"
+                        className="col-span-3"
+                        placeholder="Enter any additional information about the appointment"
+                        rows={3}
                       />
                     </div>
                   </div>
@@ -330,10 +418,18 @@ const ReceptionistAppointments = () => {
               <TableBody>
                 {filteredAppointments.map((appointment) => (
                   <TableRow key={appointment.id}>
-                    <TableCell>{appointment.patientName}</TableCell>
-                    <TableCell>{appointment.doctorName}</TableCell>
-                    <TableCell>{appointment.type}</TableCell>
-                    <TableCell>{`${appointment.date} ${appointment.time}`}</TableCell>
+                    <TableCell>{`${appointment.patient.firstName} ${appointment.patient.lastName}`}</TableCell>
+                    <TableCell>
+                      {`${appointment.doctor.firstName} ${appointment.doctor.lastName}`}
+                    </TableCell>
+                    <TableCell>{appointment.type.type}</TableCell>
+                    <TableCell>{`${format(
+                      new Date(appointment.date),
+                      "dd/MM/yyyy"
+                    )} ${format(
+                      new Date(appointment.time),
+                      "HH:mm"
+                    )}`}</TableCell>
                     <TableCell>
                       <div className="flex space-x-2">
                         <Dialog>
@@ -359,7 +455,9 @@ const ReceptionistAppointments = () => {
                               <form
                                 onSubmit={(e) => {
                                   e.preventDefault();
-                                  const formData = new FormData(e.target);
+                                  const formData = new FormData(
+                                    e.target as HTMLFormElement
+                                  );
                                   handleUpdateAppointment({
                                     ...selectedAppointment,
                                     ...Object.fromEntries(formData),
@@ -369,27 +467,25 @@ const ReceptionistAppointments = () => {
                                 <div className="grid gap-4 py-4">
                                   <div className="grid grid-cols-4 items-center gap-4">
                                     <Label
-                                      htmlFor="edit-doctorName"
+                                      htmlFor="edit-doctor"
                                       className="text-right"
                                     >
                                       Doctor Name
                                     </Label>
-                                    <Select
-                                      name="doctorName"
-                                      defaultValue={
-                                        selectedAppointment.doctorName
-                                      }
-                                    >
-                                      <SelectTrigger className="col-span-3">
-                                        <SelectValue placeholder="Select a doctor" />
+                                    <Select name="doctorId" required>
+                                      <SelectTrigger
+                                        id="edit-doctor"
+                                        className="col-span-3"
+                                      >
+                                        <SelectValue placeholder="Select Doctor Name" />
                                       </SelectTrigger>
                                       <SelectContent>
                                         {doctors.map((doctor) => (
                                           <SelectItem
                                             key={doctor.id}
-                                            value={doctor.name}
+                                            value={String(doctor.id)}
                                           >
-                                            {doctor.name}
+                                            {doctor.firstName} {doctor.lastName}
                                           </SelectItem>
                                         ))}
                                       </SelectContent>
@@ -402,17 +498,20 @@ const ReceptionistAppointments = () => {
                                     >
                                       Appointment Type
                                     </Label>
-                                    <Select
-                                      name="type"
-                                      defaultValue={selectedAppointment.type}
-                                    >
-                                      <SelectTrigger className="col-span-3">
+                                    <Select name="typeId" required>
+                                      <SelectTrigger
+                                        id="edit-type"
+                                        className="col-span-3"
+                                      >
                                         <SelectValue placeholder="Select appointment type" />
                                       </SelectTrigger>
                                       <SelectContent>
                                         {appointmentTypes.map((type) => (
-                                          <SelectItem key={type} value={type}>
-                                            {type}
+                                          <SelectItem
+                                            key={type.type}
+                                            value={String(type.id)}
+                                          >
+                                            {type.type}
                                           </SelectItem>
                                         ))}
                                       </SelectContent>
@@ -431,6 +530,7 @@ const ReceptionistAppointments = () => {
                                       type="date"
                                       defaultValue={selectedAppointment.date}
                                       className="col-span-3"
+                                      required
                                     />
                                   </div>
                                   <div className="grid grid-cols-4 items-center gap-4">
@@ -446,6 +546,24 @@ const ReceptionistAppointments = () => {
                                       type="time"
                                       defaultValue={selectedAppointment.time}
                                       className="col-span-3"
+                                      required
+                                    />
+                                  </div>
+                                  <div className="grid grid-cols-4 items-center gap-4">
+                                    <Label
+                                      htmlFor="edit-notes"
+                                      className="text-right"
+                                    >
+                                      Additional Notes
+                                    </Label>
+                                    <Textarea
+                                      id="edit-notes"
+                                      name="additionalNotes"
+                                      defaultValue={
+                                        selectedAppointment.additionalNotes
+                                      }
+                                      className="col-span-3"
+                                      placeholder="Optional additional notes"
                                     />
                                   </div>
                                 </div>
@@ -458,6 +576,7 @@ const ReceptionistAppointments = () => {
                             )}
                           </DialogContent>
                         </Dialog>
+
                         <Button
                           variant="destructive"
                           size="sm"

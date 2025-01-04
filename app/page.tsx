@@ -74,7 +74,8 @@ export default function Home() {
               </CardHeader>
               <CardContent className="text-center">
                 <p className="text-gray-400">
-                  Handle appointments, patient registration, and front desk operations
+                  Handle appointments, patient registration, and front desk
+                  operations
                 </p>
                 <div className="mt-4 text-purple-400 text-sm group-hover:text-purple-300">
                   Enter Portal →
@@ -85,9 +86,7 @@ export default function Home() {
         </div>
 
         <footer className="text-center mt-16 text-gray-500">
-          <p className="text-sm">
-            © 2024 DentalDB. All rights reserved.
-          </p>
+          <p className="text-sm">© 2024 DentalDB. All rights reserved.</p>
         </footer>
       </div>
     </main>

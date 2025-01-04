@@ -109,11 +109,38 @@ export default function MainFile() {
     "15:00",
   ];
 
+<<<<<<< HEAD
 const [doctors,setDoctors] = useState<Doctor[]>([]);
   
 
 const handleConfirmAppointment = async () => {
  // console.log(selectedDoctor, selectedReason, additionalNotes, date, selectedTime);
+=======
+  const reasons = [
+    "General Checkup",
+    "Follow-up Appointment",
+    "Vaccination",
+    "Lab Results Review",
+    "Prescription Refill",
+    "Other (please specify)",
+  ];
+  const handleConfirmAppointment = () => {
+    fetchAppointments();
+    const newAppointment = {
+      id: Date.now(),
+      date: date
+        ? format(date, "MMMM d, yyyy")
+        : format(new Date(), "MMMM d, yyyy"),
+      time: selectedTime,
+      doctor: selectedDoctor,
+      reason: selectedReason,
+    };
+
+    setWaitingAppointments((prevAppointments) => [
+      ...prevAppointments,
+      newAppointment,
+    ]);
+>>>>>>> 45ced7900c01582f717015995c37fcbd1a3fe6ae
 
   if (!date || !selectedTime || !selectedReason || !selectedDoctor) {
     toast({

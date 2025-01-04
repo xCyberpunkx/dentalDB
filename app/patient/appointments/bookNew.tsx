@@ -57,6 +57,7 @@ export default function BookNew({
   doctors,
 
 }: BookNewProps) {
+  
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
       <Card className="md:col-span-2">
@@ -69,7 +70,9 @@ export default function BookNew({
               <Calendar
                 mode="single"
                 selected={date}
-                onSelect={(date: Date | undefined) => date && handleSelectDate(date)}
+                onSelect={(date: Date | undefined) =>
+                  date && handleSelectDate(date)
+                }
                 fromDate={new Date()}
                 className="rounded-md border-gray-200 dark:border-gray-700"
               />
