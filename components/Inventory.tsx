@@ -7,7 +7,6 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Bar, Doughnut } from "react-chartjs-2"
@@ -31,12 +30,13 @@ interface InventoryItem {
 
 export default function Inventory() {
   const [inventory, setInventory] = useState<InventoryItem[]>([
-    { id: "1", name: "خيط الأسنان", quantity: 100, unit: "قطعة", reorderPoint: 20, supplier: "شركة مستلزمات الأسنان", lastOrderDate: "2023-06-15", expirationDate: "2024-06-15", category: "نظافة", location: "المخزن أ", cost: 150 },
-    { id: "2", name: "فرشاة أسنان", quantity: 50, unit: "قطعة", reorderPoint: 10, supplier: "شركة العناية بالفم", lastOrderDate: "2023-06-01", expirationDate: "2025-06-01", category: "نظافة", location: "المخزن ب", cost: 200 },
-    { id: "3", name: "زرعة أسنان", quantity: 25, unit: "قطعة", reorderPoint: 5, supplier: "حلول الزرع", lastOrderDate: "2023-05-20", expirationDate: "2026-05-20", category: "جراحة", location: "المخزن ج", cost: 15000 },
-    { id: "4", name: "مخدر موضعي", quantity: 30, unit: "قنينة", reorderPoint: 10, supplier: "المستلزمات الطبية", lastOrderDate: "2023-06-10", expirationDate: "2024-06-10", category: "أدوية", location: "المخزن د", cost: 3000 },
-    { id: "5", name: "كرسي طب الأسنان", quantity: 5, unit: "قطعة", reorderPoint: 1, supplier: "معدات طب الأسنان", lastOrderDate: "2023-01-15", expirationDate: "2033-01-15", category: "معدات", location: "أرضية العيادة", cost: 500000 },
-  ])
+    { "id": "1", "name": "Dental Floss", "quantity": 100, "unit": "Piece", "reorderPoint": 20, "supplier": "Dental Supplies Company", "lastOrderDate": "2023-06-15", "expirationDate": "2024-06-15", "category": "Hygiene", "location": "Storage A", "cost": 150 },
+    { "id": "2", "name": "Toothbrush", "quantity": 50, "unit": "Piece", "reorderPoint": 10, "supplier": "Oral Care Company", "lastOrderDate": "2023-06-01", "expirationDate": "2025-06-01", "category": "Hygiene", "location": "Storage B", "cost": 200 },
+    { "id": "3", "name": "Dental Implant", "quantity": 25, "unit": "Piece", "reorderPoint": 5, "supplier": "Implant Solutions", "lastOrderDate": "2023-05-20", "expirationDate": "2026-05-20", "category": "Surgery", "location": "Storage C", "cost": 15000 },
+    { "id": "4", "name": "Topical Anesthetic", "quantity": 30, "unit": "Bottle", "reorderPoint": 10, "supplier": "Medical Supplies", "lastOrderDate": "2023-06-10", "expirationDate": "2024-06-10", "category": "Medications", "location": "Storage D", "cost": 3000 },
+    { "id": "5", "name": "Dental Chair", "quantity": 5, "unit": "Piece", "reorderPoint": 1, "supplier": "Dental Equipment", "lastOrderDate": "2023-01-15", "expirationDate": "2033-01-15", "category": "Equipment", "location": "Clinic Floor", "cost": 500000 }
+]
+)
   const [newItem, setNewItem] = useState<Omit<InventoryItem, 'id'>>({ 
     name: "", 
     quantity: 0, 
