@@ -17,22 +17,22 @@ interface Appointment {
   patient: string
   doctor: string
   reason: string
-  status: "Scheduled" | "In Progress" | "Completed" | "Cancelled"
+  status: "Scheduled" | "In Progress" | "Completed" | "Cancelled" | "مجدول" | "قيد التنفيذ" | "مكتمل"
 }
 
 const mockDoctors = [
-  "Dr. Ahmed Benali",
+  "Dr. Ahmed Ben Ali",
   "Dr. Fatima Zidane",
   "Dr. Karim Bouaziz",
   "Dr. Amira Mansouri",
 ]
 
 const mockPatients = [
-  "Mohammed Larbi",
+  "Mohammed Al-Arabi",
   "Amina Beloufa",
   "Youcef Kaddour",
   "Nadia Hamidi",
-  "Rachid Benmoussa",
+  "Rachid Ben Moussa",
   "Leila Boudiaf",
   "Omar Hadjadj",
   "Samira Messaoudi",
@@ -42,7 +42,16 @@ const mockPatients = [
 
 export default function CalendarView() {
   const [date, setDate] = useState<Date | undefined>(new Date())
-  const [appointments, setAppointments] = useState<Appointment[]>([])
+  const [appointments, setAppointments] = useState<Appointment[]>([
+    { id: "1", title: "Dental Checkup", date: new Date(2023, 6, 15), time: "10:00", patient: "Mohammed Al-Arabi", doctor: "Dr. Ahmed Ben Ali", reason: "Regular checkup", status: "Scheduled" },
+    { id: "2", title: "Root Canal", date: new Date(2023, 6, 16), time: "14:00", patient: "Amina Beloufa", doctor: "Dr. Fatima Zidane", reason: "Severe tooth pain", status: "Scheduled" },
+    { id: "3", title: "Teeth Cleaning", date: new Date(2023, 6, 17), time: "11:30", patient: "Youcef Kaddour", doctor: "Dr. Karim Bouaziz", reason: "Regular cleaning", status: "Scheduled" },
+    { id: "4", title: "Dental Implant Consultation", date: new Date(2023, 6, 18), time: "09:00", patient: "Nadia Hamidi", doctor: "Dr. Amira Mansouri", reason: "Discuss implant options", status: "Scheduled" },
+    { id: "5", title: "Wisdom Tooth Extraction", date: new Date(2023, 6, 19), time: "13:00", patient: "Rachid Ben Moussa", doctor: "Dr. Ahmed Ben Ali", reason: "Impacted wisdom tooth", status: "Scheduled" },
+    { id: "6", title: "Orthodontic Adjustment", date: new Date(2023, 6, 20), time: "15:30", patient: "Leila Boudiaf", doctor: "Dr. Fatima Zidane", reason: "Regular braces adjustment", status: "Scheduled" },
+    { id: "7", title: "Cavity Filling", date: new Date(2023, 6, 21), time: "11:00", patient: "Omar Hadjadj", doctor: "Dr. Karim Bouaziz", reason: "Treat dental cavity", status: "Scheduled" },
+    { id: "8", title: "Dental Crown Fitting", date: new Date(2023, 6, 22), time: "14:30", patient: "Samira Messaoudi", doctor: "Dr. Amira Mansouri", reason: "Crown installation", status: "Scheduled" },
+  ])
   const [newAppointment, setNewAppointment] = useState<Omit<Appointment, 'id'>>({
     title: "",
     date: new Date(),
@@ -55,12 +64,7 @@ export default function CalendarView() {
 
   useEffect(() => {
     // Simulating fetching appointments from an API
-    const mockAppointments: Appointment[] = [
-      { id: "1", title: "Dental Checkup", date: new Date(2023, 6, 15), time: "10:00", patient: "Mohammed Larbi", doctor: "Dr. Ahmed Benali", reason: "Regular checkup", status: "Scheduled" },
-      { id: "2", title: "Root Canal", date: new Date(2023, 6, 16), time: "14:00", patient: "Amina Beloufa", doctor: "Dr. Fatima Zidane", reason: "Severe tooth pain", status: "Scheduled" },
-      { id: "3", title: "Teeth Cleaning", date: new Date(2023, 6, 17), time: "11:30", patient: "Youcef Kaddour", doctor: "Dr. Karim Bouaziz", reason: "Regular cleaning", status: "Scheduled" },
-    ]
-    setAppointments(mockAppointments)
+
   }, [])
 
   const addAppointment = () => {
@@ -98,17 +102,17 @@ export default function CalendarView() {
             {appointmentsForSelectedDate.length > 0 ? (
               <ul className="space-y-2">
                 {appointmentsForSelectedDate.map((appointment) => (
-                  <li key={appointment.id} className="flex justify-between items-center bg-gray-100 p-2 rounded">
+                  <li key={appointment.id} className="flex justify-between items-center bg-gradient-to-r from-blue-100 to-purple-100 dark:from-blue-900 dark:to-purple-900 p-3 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 cursor-pointer">
                     <div>
-                      <span className="font-bold">{appointment.time} - {appointment.title}</span>
-                      <p className="text-sm text-gray-600">Patient: {appointment.patient}</p>
-                      <p className="text-sm text-gray-600">Doctor: {appointment.doctor}</p>
+                      <span className="font-bold text-lg">{appointment.time} - {appointment.title}</span>
+                      <p className="text-sm text-gray-600 dark:text-gray-300">Patient: {appointment.patient}</p>
+                      <p className="text-sm text-gray-600 dark:text-gray-300">Doctor: {appointment.doctor}</p>
                     </div>
-                    <span className={`text-sm ${
-                      appointment.status === "Scheduled" ? "text-blue-500" :
-                      appointment.status === "In Progress" ? "text-yellow-500" :
-                      appointment.status === "Completed" ? "text-green-500" :
-                      "text-red-500"
+                    <span className={`text-sm px-2 py-1 rounded-full ${
+                      appointment.status === "Scheduled" ? "bg-blue-200 text-blue-800 dark:bg-blue-700 dark:text-blue-200" :
+                      appointment.status === "In Progress" ? "bg-yellow-200 text-yellow-800 dark:bg-yellow-700 dark:text-yellow-200" :
+                      appointment.status === "Completed" ? "bg-green-200 text-green-800 dark:bg-green-700 dark:text-green-200" :
+                      "bg-red-200 text-red-800 dark:bg-red-700 dark:text-red-200"
                     }`}>
                       {appointment.status}
                     </span>
@@ -199,7 +203,7 @@ export default function CalendarView() {
               />
             </div>
           </div>
-          <Button onClick={addAppointment}>Add Appointment</Button>
+          <Button onClick={addAppointment} className="bg-green-500 hover:bg-green-600">Add Appointment</Button>
         </DialogContent>
       </Dialog>
     </div>

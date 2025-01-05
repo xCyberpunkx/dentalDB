@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client"
 
 import React, { useState, useEffect } from "react"
@@ -31,6 +30,7 @@ import AIAssistant from "./AIAssistant"
 import CalendarView from "./CalendarView"
 import Documents from "./Documents"
 import MonitoringSystem from "./MonitoringSystem"
+import AppointmentManager from "./AppointmentManager"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Bar, Line } from "react-chartjs-2"
 import {
@@ -81,11 +81,7 @@ export default function Dashboard() {
   const [activeTab, setActiveTab] = useState("dashboard")
   const [notifications, setNotifications] = useState(3)
   const [theme, setTheme] = useState<"light" | "dark">("light")
-  const [appointments, setAppointments] = useState([
-    { id: 1, patient: "John Doe", dentist: "Dr. Smith", date: "2023-07-15", time: "10:00 AM", type: "Checkup" },
-    { id: 2, patient: "Jane Smith", dentist: "Dr. Johnson", date: "2023-07-15", time: "11:30 AM", type: "Cleaning" },
-    { id: 3, patient: "Mike Brown", dentist: "Dr. Davis", date: "2023-07-15", time: "2:00 PM", type: "Filling" },
-  ])
+  //const [appointments, setAppointments] = useState([ ... ]); //Removed appointments state
 
   useEffect(() => {
     // Simulating real-time notifications
@@ -127,17 +123,7 @@ export default function Dashboard() {
     ],
   }
 
-  const addAppointment = (appointment) => {
-    setAppointments([...appointments, { ...appointment, id: Date.now() }])
-  }
-
-  const editAppointment = (id, updatedAppointment) => {
-    setAppointments(appointments.map(app => app.id === id ? { ...app, ...updatedAppointment } : app))
-  }
-
-  const deleteAppointment = (id) => {
-    setAppointments(appointments.filter(app => app.id !== id))
-  }
+  //Removed addAppointment, editAppointment, deleteAppointment functions
 
   return (
     <div className={`min-h-screen bg-background text-foreground ${theme}`}>
@@ -172,9 +158,9 @@ export default function Dashboard() {
               <DropdownMenuContent className="w-56" align="end" forceMount>
                 <DropdownMenuLabel className="font-normal">
                   <div className="flex flex-col space-y-1">
-                    <p className="text-sm font-medium leading-none">Dr. Smith</p>
+                    <p className="text-sm font-medium leading-none">Dr. Samir</p>
                     <p className="text-xs leading-none text-muted-foreground">
-                      dr.smith@dentacare.com
+                      dr.samir@dentacare.com
                     </p>
                   </div>
                 </DropdownMenuLabel>
@@ -225,31 +211,31 @@ export default function Dashboard() {
             <TabsContent value="dashboard">
               <h2 className="text-2xl font-bold mb-4">Dashboard</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
-                <Card className="bg-blue-100 dark:bg-blue-900">
+                <Card className="bg-blue-200 dark:bg-blue-800">
                   <CardHeader>
-                    <CardTitle>Today&apos;s Appointments</CardTitle>
+                    <CardTitle>Today's Appointments</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-2xl font-bold">{appointments.length}</p>
-                    <Button className="mt-2" onClick={() => setActiveTab("calendar")}>View Calendar</Button>
+                    <p className="text-2xl font-bold">{/*appointments.length*/}</p> {/*Removed appointments.length*/}
+                    <Button className="mt-2 bg-blue-500 hover:bg-blue-600" onClick={() => setActiveTab("calendar")}>View Calendar</Button>
                   </CardContent>
                 </Card>
-                <Card className="bg-green-100 dark:bg-green-900">
+                <Card className="bg-green-200 dark:bg-green-800">
                   <CardHeader>
                     <CardTitle>Pending Tasks</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <p className="text-2xl font-bold">5</p>
-                    <Button className="mt-2" onClick={() => setActiveTab("tasks")}>Manage Tasks</Button>
+                    <Button className="mt-2 bg-green-500 hover:bg-green-600" onClick={() => setActiveTab("tasks")}>Manage Tasks</Button>
                   </CardContent>
                 </Card>
-                <Card className="bg-yellow-100 dark:bg-yellow-900">
+                <Card className="bg-yellow-200 dark:bg-yellow-800">
                   <CardHeader>
                     <CardTitle>Unread Messages</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <p className="text-2xl font-bold">{notifications}</p>
-                    <Button className="mt-2" onClick={() => setActiveTab("messages")}>View Messages</Button>
+                    <Button className="mt-2 bg-yellow-500 hover:bg-yellow-600" onClick={() => setActiveTab("messages")}>View Messages</Button>
                   </CardContent>
                 </Card>
               </div>
@@ -273,50 +259,23 @@ export default function Dashboard() {
               </div>
               <Card className="mb-8">
                 <CardHeader>
-                  <CardTitle>Today&apos;s Appointments</CardTitle>
+                  <CardTitle>Appointment Manager</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <table className="w-full">
-                    <thead>
-                      <tr>
-                        <th>Patient</th>
-                        <th>Dentist</th>
-                        <th>Time</th>
-                        <th>Type</th>
-                        <th>Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {appointments.map(app => (
-                        <tr key={app.id}>
-                          <td>{app.patient}</td>
-                          <td>{app.dentist}</td>
-                          <td>{app.time}</td>
-                          <td>{app.type}</td>
-                          <td>
-                            <Button size="sm" onClick={() => editAppointment(app.id, { ...app })}>Edit</Button>
-                            <Button size="sm" variant="destructive" onClick={() => deleteAppointment(app.id)}>Delete</Button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                  <Button className="mt-4" onClick={() => addAppointment({ patient: "New Patient", dentist: "Dr. Smith", date: "2023-07-15", time: "3:00 PM", type: "Checkup" })}>
-                    Add Appointment
-                  </Button>
+                  <AppointmentManager />
                 </CardContent>
               </Card>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                <Button onClick={() => setActiveTab("patients")}>Manage Patients</Button>
-                <Button onClick={() => setActiveTab("inventory")}>Check Inventory</Button>
-                <Button onClick={() => setActiveTab("billing")}>Process Billing</Button>
-                <Button onClick={() => setActiveTab("reports")}>Generate Reports</Button>
+                <Button className="bg-indigo-500 hover:bg-indigo-600" onClick={() => setActiveTab("patients")}>Manage Patients</Button>
+                <Button className="bg-pink-500 hover:bg-pink-600" onClick={() => setActiveTab("inventory")}>Check Inventory</Button>
+                <Button className="bg-teal-500 hover:bg-teal-600" onClick={() => setActiveTab("billing")}>Process Billing</Button>
+                <Button className="bg-orange-500 hover:bg-orange-600" onClick={() => setActiveTab("reports")}>Generate Reports</Button>
               </div>
             </TabsContent>
             <TabsContent value="patients"><PatientManagement /></TabsContent>
-            <TabsContent value="inventory"><Inventory /></TabsContent><TabsContent value="inventory"><Inventory /></TabsContent>
+            <TabsContent value="inventory"><Inventory /></TabsContent>
             <TabsContent value="billing"><Billing /></TabsContent>
-           {/*TabsContent value="messages"><Messages /></TabsContent> */} 
+            <TabsContent value="messages"><Messages /></TabsContent>
             <TabsContent value="queue"><QueueLobby /></TabsContent>
             <TabsContent value="reports"><Reports /></TabsContent>
             <TabsContent value="integrations"><Integrations /></TabsContent>

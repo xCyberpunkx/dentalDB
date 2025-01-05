@@ -29,31 +29,73 @@ export default function PatientManagement() {
   const [patients, setPatients] = useState<Patient[]>([
     { 
       id: "1", 
-      name: "John Doe", 
+      name: "John Smith", 
       email: "john@example.com", 
       phone: "123-456-7890", 
       dateOfBirth: "1990-05-10", 
-      address: "123 Main St", 
+      address: "123 Main St, Cityville", 
       nextAppointment: "2023-07-15", 
       lastVisit: "2023-06-01",
       medicalHistory: ["Allergies: Penicillin", "Previous surgeries: Wisdom teeth removal"],
-      insuranceProvider: "DentalCare Inc.",
-      insuranceNumber: "DC123456",
-      preferredDentist: "Dr. Smith"
+      insuranceProvider: "HealthCare Inc.",
+      insuranceNumber: "INS123456",
+      preferredDentist: "Dr. Johnson"
     },
     { 
       id: "2", 
-      name: "Jane Smith", 
-      email: "jane@example.com", 
-      phone: "098-765-4321", 
+      name: "Emily Davis", 
+      email: "emily@example.com", 
+      phone: "987-654-3210", 
       dateOfBirth: "1985-11-22", 
-      address: "456 Oak Ave", 
+      address: "456 Elm St, Townsville", 
       nextAppointment: "2023-07-20", 
       lastVisit: "2023-06-15",
       medicalHistory: ["Chronic conditions: Diabetes"],
-      insuranceProvider: "HealthFirst",
-      insuranceNumber: "HF789012",
-      preferredDentist: "Dr. Johnson"
+      insuranceProvider: "DentalCare Plus",
+      insuranceNumber: "INS789012",
+      preferredDentist: "Dr. Williams"
+    },
+    { 
+      id: "3", 
+      name: "Michael Johnson", 
+      email: "michael@example.com", 
+      phone: "456-789-0123", 
+      dateOfBirth: "1978-03-15", 
+      address: "789 Oak St, Villagetown", 
+      nextAppointment: "2023-07-25", 
+      lastVisit: "2023-06-10",
+      medicalHistory: ["Allergies: Latex"],
+      insuranceProvider: "SmileCare Insurance",
+      insuranceNumber: "INS345678",
+      preferredDentist: "Dr. Brown"
+    },
+    { 
+      id: "4", 
+      name: "Sarah Thompson", 
+      email: "sarah@example.com", 
+      phone: "789-012-3456", 
+      dateOfBirth: "1992-09-05", 
+      address: "101 Pine St, Hamletville", 
+      nextAppointment: "2023-07-18", 
+      lastVisit: "2023-06-20",
+      medicalHistory: ["Previous surgeries: Dental implants"],
+      insuranceProvider: "DentaGuard",
+      insuranceNumber: "INS901234",
+      preferredDentist: "Dr. Davis"
+    },
+    { 
+      id: "5", 
+      name: "Robert Wilson", 
+      email: "robert@example.com", 
+      phone: "234-567-8901", 
+      dateOfBirth: "1980-12-30", 
+      address: "202 Maple St, Boroughburg", 
+      nextAppointment: "2023-07-22", 
+      lastVisit: "2023-06-05",
+      medicalHistory: ["Chronic conditions: Hypertension"],
+      insuranceProvider: "OralHealth Assurance",
+      insuranceNumber: "INS567890",
+      preferredDentist: "Dr. Taylor"
     },
   ])
   const [newPatient, setNewPatient] = useState<Omit<Patient, 'id'>>({
@@ -198,14 +240,14 @@ export default function PatientManagement() {
         </TableHeader>
         <TableBody>
           {filteredPatients.map((patient) => (
-            <TableRow key={patient.id}>
+            <TableRow key={patient.id} className="hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer" onClick={() => setSelectedPatient(patient)}>
               <TableCell>{patient.name}</TableCell>
               <TableCell>{patient.email}</TableCell>
               <TableCell>{patient.phone}</TableCell>
               <TableCell>{patient.dateOfBirth}</TableCell>
               <TableCell>{patient.nextAppointment}</TableCell>
               <TableCell>
-                <Button onClick={() => setSelectedPatient(patient)}>View Details</Button>
+                <Button className="bg-blue-500 hover:bg-blue-600">View Details</Button>
               </TableCell>
             </TableRow>
           ))}

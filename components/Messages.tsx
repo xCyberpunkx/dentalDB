@@ -1,14 +1,12 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import ReactQuill from 'react-quill'
-import 'react-quill/dist/quill.snow.css'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-
+import { Textarea } from "@/components/ui/textarea"
 
 interface Message {
   id: string
@@ -26,24 +24,18 @@ interface Channel {
 }
 
 export default function Messages() {
-  const [messages, setMessages] = useState<Message[]>([])
+  const [messages, setMessages] = useState<Message[]>([
+    { id: "1", sender: "John Doe", recipient: "Dr. Smith", subject: "Appointment Request", content: "Can I schedule an appointment for next week?", date: "2023-07-01", channel: "general" },
+    { id: "2", sender: "Dr. Smith", recipient: "Jane Smith", subject: "Follow-up", content: "How are you feeling after your recent procedure?", date: "2023-07-02", channel: "patients" },
+    { id: "3", sender: "Nurse Johnson", recipient: "All Staff", subject: "Staff Meeting", content: "Reminder: We have a staff meeting tomorrow at 9 AM.", date: "2023-07-03", channel: "staff" },
+  ])
   const [newMessage, setNewMessage] = useState<Omit<Message, 'id' | 'date'>>({ sender: "", recipient: "", subject: "", content: "", channel: "general" })
-  const [channels, setChannels] = useState<Channel[]>([
+  const [channels] = useState<Channel[]>([
     { id: "1", name: "general" },
     { id: "2", name: "staff" },
     { id: "3", name: "patients" },
   ])
   const [activeChannel, setActiveChannel] = useState("general")
-  //Removed mounted state and useEffect
-
-  useEffect(() => {
-    // Simulating fetching messages
-    setMessages([
-      { id: "1", sender: "John Doe", recipient: "Dr. Smith", subject: "Appointment Request", content: "Can I schedule an appointment for next week?", date: "2023-07-01", channel: "general" },
-      { id: "2", sender: "Dr. Smith", recipient: "Jane Smith", subject: "Follow-up", content: "How are you feeling after your recent procedure?", date: "2023-07-02", channel: "patients" },
-      { id: "3", sender: "Nurse Johnson", recipient: "All Staff", subject: "Staff Meeting", content: "Reminder: We have a staff meeting tomorrow at 9 AM.", date: "2023-07-03", channel: "staff" },
-    ])
-  }, [])
 
   const sendMessage = () => {
     const newMsg = { 
@@ -87,11 +79,11 @@ export default function Messages() {
                     value={newMessage.subject}
                     onChange={(e) => setNewMessage({ ...newMessage, subject: e.target.value })}
                   />
-                  <ReactQuill
-                    theme="snow"
-                    value={newMessage.content}
-                    onChange={(content) => setNewMessage({ ...newMessage, content })}
+                  <Textarea
                     placeholder="Type your message here..."
+                    value={newMessage.content}
+                    onChange={(e) => setNewMessage({ ...newMessage, content: e.target.value })}
+                    rows={4}
                   />
                   <Button onClick={sendMessage}>Send Message</Button>
                 </div>
@@ -99,7 +91,7 @@ export default function Messages() {
             </Card>
             <div className="space-y-4 mt-4">
               {filteredMessages.map((message) => (
-                <Card key={message.id}>
+                <Card key={message.id} className="cursor-pointer hover:shadow-md transition-shadow">
                   <CardHeader>
                     <div className="flex items-center space-x-2">
                       <Avatar>
@@ -114,7 +106,7 @@ export default function Messages() {
                   </CardHeader>
                   <CardContent>
                     <p className="text-sm text-gray-500">Date: {message.date}</p>
-                    <div className="mt-2" dangerouslySetInnerHTML={{ __html: message.content }} />
+                    <div className="mt-2">{message.content}</div>
                   </CardContent>
                 </Card>
               ))}

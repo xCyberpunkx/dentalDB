@@ -30,7 +30,13 @@ interface InventoryItem {
 }
 
 export default function Inventory() {
-  const [inventory, setInventory] = useState<InventoryItem[]>([])
+  const [inventory, setInventory] = useState<InventoryItem[]>([
+    { id: "1", name: "خيط الأسنان", quantity: 100, unit: "قطعة", reorderPoint: 20, supplier: "شركة مستلزمات الأسنان", lastOrderDate: "2023-06-15", expirationDate: "2024-06-15", category: "نظافة", location: "المخزن أ", cost: 150 },
+    { id: "2", name: "فرشاة أسنان", quantity: 50, unit: "قطعة", reorderPoint: 10, supplier: "شركة العناية بالفم", lastOrderDate: "2023-06-01", expirationDate: "2025-06-01", category: "نظافة", location: "المخزن ب", cost: 200 },
+    { id: "3", name: "زرعة أسنان", quantity: 25, unit: "قطعة", reorderPoint: 5, supplier: "حلول الزرع", lastOrderDate: "2023-05-20", expirationDate: "2026-05-20", category: "جراحة", location: "المخزن ج", cost: 15000 },
+    { id: "4", name: "مخدر موضعي", quantity: 30, unit: "قنينة", reorderPoint: 10, supplier: "المستلزمات الطبية", lastOrderDate: "2023-06-10", expirationDate: "2024-06-10", category: "أدوية", location: "المخزن د", cost: 3000 },
+    { id: "5", name: "كرسي طب الأسنان", quantity: 5, unit: "قطعة", reorderPoint: 1, supplier: "معدات طب الأسنان", lastOrderDate: "2023-01-15", expirationDate: "2033-01-15", category: "معدات", location: "أرضية العيادة", cost: 500000 },
+  ])
   const [newItem, setNewItem] = useState<Omit<InventoryItem, 'id'>>({ 
     name: "", 
     quantity: 0, 
@@ -48,14 +54,7 @@ export default function Inventory() {
 
   useEffect(() => {
     // Simulating fetching inventory data from an API
-    const mockInventory: InventoryItem[] = [
-      { id: "1", name: "Dental Floss", quantity: 100, unit: "pcs", reorderPoint: 20, supplier: "Dental Supplies Co.", lastOrderDate: "2023-06-15", expirationDate: "2024-06-15", category: "Hygiene", location: "Storage A", cost: 150 },
-      { id: "2", name: "Toothbrush", quantity: 50, unit: "pcs", reorderPoint: 10, supplier: "Oral Care Inc.", lastOrderDate: "2023-06-01", expirationDate: "2025-06-01", category: "Hygiene", location: "Storage B", cost: 200 },
-      { id: "3", name: "Dental Implant", quantity: 25, unit: "pcs", reorderPoint: 5, supplier: "Implant Solutions", lastOrderDate: "2023-05-20", expirationDate: "2026-05-20", category: "Surgical", location: "Storage C", cost: 15000 },
-      { id: "4", name: "Anesthetic", quantity: 30, unit: "vials", reorderPoint: 10, supplier: "MedSupplies", lastOrderDate: "2023-06-10", expirationDate: "2024-06-10", category: "Medication", location: "Storage D", cost: 3000 },
-      { id: "5", name: "Dental Chair", quantity: 5, unit: "pcs", reorderPoint: 1, supplier: "DentEquip", lastOrderDate: "2023-01-15", expirationDate: "2033-01-15", category: "Equipment", location: "Clinic Floor", cost: 500000 },
-    ]
-    setInventory(mockInventory)
+    
   }, [])
 
   const addItem = () => {
@@ -96,11 +95,14 @@ export default function Inventory() {
               .reduce((sum, item) => sum + item.quantity * item.cost, 0)
           ),
         backgroundColor: [
-          'rgba(255, 99, 132, 0.6)',
-          'rgba(54, 162, 235, 0.6)',
-          'rgba(255, 206, 86, 0.6)',
-          'rgba(75, 192, 192, 0.6)',
-          'rgba(153, 102, 255, 0.6)',
+          'rgba(255, 99, 132, 0.8)',
+          'rgba(54, 162, 235, 0.8)',
+          'rgba(255, 206, 86, 0.8)',
+          'rgba(75, 192, 192, 0.8)',
+          'rgba(153, 102, 255, 0.8)',
+          'rgba(255, 159, 64, 0.8)',
+          'rgba(153, 102, 255, 0.8)',
+          'rgba(201, 203, 207, 0.8)'
         ],
       },
     ],
@@ -155,10 +157,18 @@ export default function Inventory() {
           </div>
           <Card className="mt-4">
             <CardHeader>
-              <CardTitle>Category Distribution</CardTitle>
+              <CardTitle>توزيع الفئات</CardTitle>
             </CardHeader>
             <CardContent>
-              <Doughnut data={categoryData} />
+              <div style={{ height: '300px', width: '100%' }}>
+                <Doughnut 
+                  data={categoryData} 
+                  options={{
+                    responsive: true,
+                    maintainAspectRatio: false,
+                  }}
+                />
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
@@ -284,7 +294,7 @@ export default function Inventory() {
             </TableHeader>
             <TableBody>
               {filteredInventory.map((item) => (
-                <TableRow key={item.id}>
+                <TableRow key={item.id} className="hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer" onClick={() => console.log(`Clicked item: ${item.name}`)}>
                   <TableCell>{item.name}</TableCell>
                   <TableCell>{item.quantity}</TableCell>
                   <TableCell>{item.unit}</TableCell>
@@ -292,12 +302,12 @@ export default function Inventory() {
                   <TableCell>{item.supplier}</TableCell>
                   <TableCell>{item.category}</TableCell>
                   <TableCell>{item.location}</TableCell>
-                  <TableCell>{item.cost.toLocaleString('fr-DZ', { style: 'currency', currency: 'DZD' })}</TableCell>
+                  <TableCell>{item.cost.toLocaleString('ar-DZ', { style: 'currency', currency: 'DZD' })}</TableCell>
                   <TableCell>
                     <div className="flex space-x-2">
-                      <Button onClick={() => updateQuantity(item.id, 1)}>+</Button>
-                      <Button onClick={() => updateQuantity(item.id, -1)}>-</Button>
-                      <Button onClick={() => deleteItem(item.id)}>Delete</Button>
+                      <Button className="bg-green-500 hover:bg-green-600" onClick={(e) => { e.stopPropagation(); updateQuantity(item.id, 1); }}>+</Button>
+                      <Button className="bg-red-500 hover:bg-red-600" onClick={(e) => { e.stopPropagation(); updateQuantity(item.id, -1); }}>-</Button>
+                      <Button className="bg-gray-500 hover:bg-gray-600" onClick={(e) => { e.stopPropagation(); deleteItem(item.id); }}>حذف</Button>
                     </div>
                   </TableCell>
                 </TableRow>
